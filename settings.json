@@ -1,0 +1,55 @@
+{
+  "api_keys": {
+    "openai_api_key": "your_openai_api_key_here",
+    "alpha_vantage_key": "your_alpha_vantage_key_here",
+    "finnhub_key": "your_finnhub_key_here",
+    "news_api_key": "your_news_api_key_here"
+  },
+  "data_sources": {
+    "market_data": [
+      "yahoo_finance",
+      "alpha_vantage",
+      "finnhub"
+    ],
+    "news_data": [
+      "news_api"
+    ],
+    "social_media": [
+      "twitter",
+      "reddit",
+      "stocktwits"
+    ]
+  },
+  "refresh_settings": {
+    "refresh_interval": "5 minutes",
+    "cache_duration": "1 hour"
+  },
+  "agent_settings": {
+    "model": "gpt-4",
+    "temperature": 0.7,
+    "max_tokens": 1024,
+    "enabled_agents": [
+      "market_data",
+      "news_sentiment",
+      "technical_analysis",
+      "risk_assessment",
+      "report_generation"
+    ],
+    "agent_memory": 30,
+    "confidence_threshold": 0.75,
+    "collaboration_enabled": true
+  },
+  "ui_preferences": {
+    "theme": "System Default",
+    "chart_style": "Modern",
+    "default_chart_period": "6 Months",
+    "display_options": {
+      "show_technical_indicators": true,
+      "show_news_feed": true,
+      "show_risk_metrics": true,
+      "show_performance_metrics": true,
+      "show_agent_log": true,
+      "show_tooltips": true
+    }
+  }
+}
