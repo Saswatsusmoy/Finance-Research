@@ -1,80 +1,107 @@
-# 🤝 Contributing to Financial Research Assistant
+# Contributing Guide
 
-Thank you for your interest in contributing to the Financial Research Assistant! This document provides comprehensive guidelines for setting up the development environment, understanding the codebase, and contributing effectively.
+## Table of Contents
 
-## 📋 Table of Contents
+1. [Overview](#overview)
+2. [Development Environment](#development-environment)
+3. [Project Architecture](#project-architecture)
+4. [Development Standards](#development-standards)
+5. [Testing Requirements](#testing-requirements)
+6. [API Development Guidelines](#api-development-guidelines)
+7. [Frontend Development Standards](#frontend-development-standards)
+8. [Quality Assurance](#quality-assurance)
+9. [Deployment Procedures](#deployment-procedures)
+10. [Submission Requirements](#submission-requirements)
 
-- [Getting Started](#-getting-started)
-- [Development Environment Setup](#-development-environment-setup)
-- [Project Structure](#-project-structure)
-- [Code Style Guidelines](#-code-style-guidelines)
-- [Development Workflow](#-development-workflow)
-- [Testing](#-testing)
-- [Debugging Tools](#-debugging-tools)
-- [API Development](#-api-development)
-- [Frontend Development](#-frontend-development)
-- [Deployment & Production](#-deployment--production)
-- [Troubleshooting](#-troubleshooting)
-- [Submitting Changes](#-submitting-changes)
+## Overview
 
----
+The Financial Research Assistant is a sophisticated financial analysis platform that integrates artificial intelligence agents, real-time market data processing, and advanced analytics capabilities. This document provides comprehensive technical guidelines for contributing to the project.
 
-## 🚀 Getting Started
+### Technical Stack
+
+- **Backend**: Python 3.9+, Flask, FastAPI
+- **AI Framework**: LangGraph for multi-agent orchestration
+- **Frontend**: Vanilla JavaScript ES6+, HTML5, CSS3
+- **Data Processing**: Pandas, NumPy, TA-Lib
+- **Visualization**: Plotly.js
+- **Testing**: pytest, Jest
+- **Containerization**: Docker
 
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
+Contributors must have experience with:
 
-- **Python 3.9+** with pip
-- **Node.js 16+** with npm (for frontend tools)
-- **Git** for version control
-- **Code Editor** (VS Code recommended with Python extension)
+- Python development and virtual environments
+- RESTful API design and implementation
+- Modern JavaScript (ES6+) and DOM manipulation
+- Git version control and collaborative workflows
+- Software testing methodologies
 
-### Quick Setup
+## Development Environment
 
-1. **Fork & Clone the Repository**
-   ```bash
-   git clone https://github.com/your-username/financial-research-assistant.git
-   cd financial-research-assistant
-   ```
+### System Requirements
 
-2. **Set Up Python Environment**
-   ```bash
-   # Create virtual environment
-   python -m venv venv
-   
-   # Activate virtual environment
-   # Windows
-   venv\Scripts\activate
-   # macOS/Linux
-   source venv/bin/activate
-   
-   # Install dependencies
-   pip install -r requirements.txt
-   ```
+- Python 3.9 or higher
+- Node.js 16+ (for frontend tooling)
+- Git 2.30+
+- Minimum 8GB RAM
+- Docker (optional, for containerized development)
 
-3. **Environment Configuration**
-   ```bash
-   # Copy environment template
-   cp .env.example .env
-   
-   # Edit .env with your API keys (optional for development)
-   ```
+### Environment Setup
 
-4. **Initialize Development Environment**
-   ```bash
-   python init_setup.py
-   ```
+#### 1. Repository Configuration
 
----
+```bash
+git clone https://github.com/your-username/financial-research-assistant.git
+cd financial-research-assistant
+git remote add upstream https://github.com/original/financial-research-assistant.git
+```
 
-## 🛠️ Development Environment Setup
+#### 2. Python Environment
 
-### IDE Configuration
+```bash
+python -m venv venv
+source venv/bin/activate  # Unix/macOS
+# or
+venv\Scripts\activate  # Windows
 
-#### VS Code Settings (Recommended)
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install -r requirements-dev.txt  # Development dependencies
+```
 
-Create `.vscode/settings.json`:
+#### 3. Environment Variables
+
+Create `.env` file with required configuration:
+
+```bash
+# Core Application
+DEBUG_MODE=true
+LOG_LEVEL=DEBUG
+SECRET_KEY=development_secret_key
+
+# External APIs
+OPENAI_API_KEY=your_openai_key
+ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key
+FINNHUB_API_KEY=your_finnhub_key
+NEWS_API_KEY=your_news_api_key
+
+# Database Configuration
+DATABASE_URL=sqlite:///development.db
+
+# Cache Configuration
+REDIS_URL=redis://localhost:6379/0
+CACHE_TIMEOUT=300
+
+# Security
+JWT_SECRET_KEY=jwt_development_secret
+CORS_ORIGINS=http://localhost:3000,http://localhost:5000
+```
+
+#### 4. IDE Configuration
+
+Recommended VS Code settings (`.vscode/settings.json`):
+
 ```json
 {
     "python.defaultInterpreterPath": "./venv/bin/python",
@@ -83,1224 +110,301 @@ Create `.vscode/settings.json`:
     "python.formatting.provider": "black",
     "python.linting.flake8Enabled": true,
     "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+    },
     "files.exclude": {
         "**/__pycache__": true,
         "**/venv": true,
-        "**/.env": true
+        "**/.env": true,
+        "**/*.pyc": true
     }
 }
 ```
 
-#### Recommended VS Code Extensions
+## Project Architecture
 
-- Python
-- Pylance
-- Black Formatter
-- GitLens
-- REST Client
-- JavaScript ES6 snippets
-- HTML CSS Support
-
-### Environment Variables
-
-Create a comprehensive `.env` file for development:
-
-```bash
-# Development Settings
-DEBUG_MODE=true
-LOG_LEVEL=DEBUG
-FLASK_ENV=development
-
-# API Keys (Get from respective providers)
-OPENAI_API_KEY=your_openai_api_key_here
-ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key_here
-FINNHUB_API_KEY=your_finnhub_key_here
-NEWS_API_KEY=your_news_api_key_here
-
-# Database (Optional - defaults to file storage)
-DATABASE_URL=sqlite:///dev_database.db
-
-# Cache Settings
-CACHE_TIMEOUT=300
-REDIS_URL=redis://localhost:6379/0
-
-# Security
-SECRET_KEY=your_dev_secret_key_here
-JWT_SECRET_KEY=your_jwt_secret_here
-
-# External Services
-ENABLE_REAL_DATA=true
-MOCK_DATA_FALLBACK=true
-```
-
----
-
-## 📁 Project Structure
-
-### Directory Overview
+### Directory Structure
 
 ```
 financial-research-assistant/
-├── src/                          # Core application code
-│   ├── agents/                   # LangGraph AI agents
-│   │   ├── insider_trading/      # Insider trading analysis
-│   │   └── social_sentiment/     # Social media sentiment
+├── src/                          # Core application modules
+│   ├── agents/                   # AI agent implementations
+│   │   ├── __init__.py
+│   │   ├── base_agent.py        # Base agent interface
+│   │   ├── market_analyzer.py   # Market analysis agent
+│   │   ├── risk_assessor.py     # Risk assessment agent
+│   │   └── sentiment_analyzer.py # Sentiment analysis agent
 │   ├── data/                     # Data processing modules
-│   ├── ui/                       # Streamlit UI components
-│   ├── utils/                    # Utility functions
-│   └── api.py                    # FastAPI server
-├── web/                          # Modern web interface
-│   ├── css/                      # Stylesheets
+│   │   ├── __init__.py
+│   │   ├── collectors.py        # Data collection interfaces
+│   │   ├── processors.py        # Data transformation logic
+│   │   └── validators.py        # Data validation utilities
+│   ├── api/                      # API layer
+│   │   ├── __init__.py
+│   │   ├── routes.py            # API route definitions
+│   │   ├── models.py            # Pydantic models
+│   │   └── middleware.py        # Request/response middleware
+│   ├── utils/                    # Utility modules
+│   │   ├── __init__.py
+│   │   ├── config.py            # Configuration management
+│   │   ├── logging_config.py    # Logging configuration
+│   │   └── exceptions.py        # Custom exception classes
+│   └── tests/                    # Test modules
+├── web/                          # Frontend assets
 │   ├── js/                       # JavaScript modules
-│   └── index.html                # Main HTML file
-├── tests/                        # Test suite
-├── venv/                         # Virtual environment
-├── web_server.py                 # Flask web server
-├── app.py                        # Streamlit app entry point
-├── requirements.txt              # Python dependencies
-├── settings.json                 # Application settings
-├── .env.example                  # Environment template
-└── Dockerfile                    # Container configuration
+│   ├── css/                      # Stylesheets
+│   └── index.html               # Main HTML template
+├── docs/                         # Documentation
+├── scripts/                      # Development scripts
+├── requirements.txt              # Production dependencies
+├── requirements-dev.txt          # Development dependencies
+├── pytest.ini                   # Test configuration
+├── .flake8                      # Linting configuration
+├── .gitignore                   # Git ignore patterns
+└── docker-compose.yml           # Container orchestration
 ```
 
-### Key Components
+### Core Components
 
-#### Backend Architecture
+#### Agent System Architecture
 
-1. **Flask Web Server** (`web_server.py`)
-   - Main web application server
-   - RESTful API endpoints
-   - Static file serving
-   - Session management
-
-2. **FastAPI Server** (`src/api.py`)
-   - High-performance API server
-   - Automatic OpenAPI documentation
-   - Async request handling
-   - Data validation with Pydantic
-
-3. **LangGraph Agents** (`src/agents/`)
-   - AI-powered analysis modules
-   - Multi-agent coordination
-   - State management
-   - Decision making logic
-
-4. **Data Processing** (`src/data/`)
-   - External API integrations
-   - Data cleaning and validation
-   - Caching mechanisms
-   - Rate limiting
-
-#### Frontend Architecture
-
-1. **Modern Web Interface** (`web/`)
-   - Vanilla JavaScript ES6+
-   - Responsive CSS3 with glassmorphism
-   - Plotly.js for interactive charts
-   - Real-time data updates
-
-2. **Streamlit Interface** (`src/ui/`)
-   - Python-based UI components
-   - Rapid prototyping interface
-   - Interactive widgets
-   - Data visualization
-
----
-
-## 🎨 Code Style Guidelines
-
-### Python Code Style
-
-We follow **PEP 8** with these additions:
+The AI agent system follows a modular, event-driven architecture:
 
 ```python
-# File header template
+# src/agents/base_agent.py
+from abc import ABC, abstractmethod
+from typing import Dict, Any, Optional
+from dataclasses import dataclass
+
+@dataclass
+class AgentContext:
+    """Context object passed between agents."""
+    request_id: str
+    user_id: Optional[str]
+    session_data: Dict[str, Any]
+    metadata: Dict[str, Any]
+
+class BaseAgent(ABC):
+    """Abstract base class for all AI agents."""
+  
+    def __init__(self, config: Dict[str, Any]):
+        self.config = config
+        self.name = self.__class__.__name__
+      
+    @abstractmethod
+    async def process(self, context: AgentContext, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Process input data and return results."""
+        pass
+      
+    @abstractmethod
+    def validate_input(self, input_data: Dict[str, Any]) -> bool:
+        """Validate input data format and requirements."""
+        pass
+```
+
+## Development Standards
+
+### Code Style Guidelines
+
+#### Python Standards
+
+Follow PEP 8 with the following additions:
+
+- **Line Length**: Maximum 88 characters (Black formatter default)
+- **Import Organization**: Use isort with the following configuration
+- **Type Hints**: Required for all public functions and class methods
+- **Docstrings**: Google-style docstrings for all modules, classes, and functions
+
+Example:
+
+```python
 """
-Module: financial_analysis.py
-Purpose: Comprehensive financial data analysis
-Author: Your Name
-Date: YYYY-MM-DD
+Market data analysis module.
+
+This module provides functionality for analyzing real-time and historical
+market data using various technical indicators and statistical methods.
 """
 
-# Import organization
-import os
-import sys
 from typing import Dict, List, Optional, Union
 from datetime import datetime, timedelta
+import logging
 
 import pandas as pd
 import numpy as np
-from flask import Flask, request, jsonify
-
-# Class naming: PascalCase
-class MarketDataAnalyzer:
-    """Analyzes market data with advanced technical indicators."""
-    
-    def __init__(self, config: Dict[str, str]) -> None:
-        self.config = config
-        self._cache: Dict[str, Any] = {}
-    
-    # Method naming: snake_case
-    def fetch_market_data(self, symbol: str, period: str = "1y") -> pd.DataFrame:
-        """
-        Fetch market data for a given symbol.
-        
-        Args:
-            symbol: Stock symbol (e.g., 'AAPL')
-            period: Time period ('1d', '1w', '1m', '3m', '1y')
-            
-        Returns:
-            DataFrame with OHLCV data
-            
-        Raises:
-            ValueError: If symbol is invalid
-            APIError: If data fetch fails
-        """
-        pass
-
-# Constants: UPPER_SNAKE_CASE
-DEFAULT_CACHE_TIMEOUT = 300
-API_BASE_URL = "https://api.example.com/v1"
-```
-
-### JavaScript Code Style
-
-We follow **ES6+ standards** with these guidelines:
-
-```javascript
-// File header
-/**
- * Module: market-analysis.js
- * Purpose: Real-time market data analysis and visualization
- * Author: Your Name
- * Date: YYYY-MM-DD
- */
-
-// Class naming: PascalCase
-class MarketDataManager {
-    constructor(config) {
-        this.config = config;
-        this.cache = new Map();
-        this.subscribers = [];
-    }
-    
-    // Method naming: camelCase
-    async fetchMarketData(symbol, period = '1y') {
-        try {
-            const response = await fetch(`/api/market-data/${symbol}?period=${period}`);
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(`API Error: ${data.message}`);
-            }
-            
-            return this.processMarketData(data);
-        } catch (error) {
-            console.error('Failed to fetch market data:', error);
-            throw error;
-        }
-    }
-    
-    // Private methods: underscore prefix
-    _validateSymbol(symbol) {
-        const symbolRegex = /^[A-Z]{1,5}$/;
-        return symbolRegex.test(symbol);
-    }
-}
-
-// Constants: UPPER_SNAKE_CASE
-const DEFAULT_REFRESH_INTERVAL = 5000;
-const API_ENDPOINTS = {
-    MARKET_DATA: '/api/market-data',
-    NEWS: '/api/news',
-    INSIDER_TRADING: '/api/insider-trading'
-};
-```
-
-### CSS Code Style
-
-```css
-/* Modern CSS with custom properties */
-:root {
-    /* Color palette */
-    --primary-color: #00d2ff;
-    --secondary-color: #3a7bd5;
-    --accent-color: #f093fb;
-    
-    /* Spacing system */
-    --space-xs: 0.25rem;
-    --space-sm: 0.5rem;
-    --space-md: 1rem;
-    --space-lg: 1.5rem;
-    --space-xl: 2rem;
-    
-    /* Typography */
-    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-}
-
-/* BEM methodology for class naming */
-.market-card {
-    /* Block */
-}
-
-.market-card__header {
-    /* Element */
-}
-
-.market-card__header--highlighted {
-    /* Modifier */
-}
-```
-
----
-
-## 🔄 Development Workflow
-
-### 1. Start Development Environment
-
-```bash
-# Terminal 1: Start Flask web server
-python web_server.py
-
-# Terminal 2: Start FastAPI server (optional)
-uvicorn src.api:app --reload --port 8000
-
-# Terminal 3: Start Streamlit (optional)
-streamlit run app.py
-```
-
-### 2. Development URLs
-
-- **Main Web Interface**: http://localhost:5000
-- **API Documentation**: http://localhost:8000/docs
-- **Streamlit Interface**: http://localhost:8501
-
-### 3. Hot Reloading
-
-- **Python**: Flask and FastAPI support auto-reload in development
-- **Frontend**: Browser refresh required for web interface
-- **CSS/JS**: Changes reflected immediately on refresh
-
-### 4. Git Workflow
-
-```bash
-# Create feature branch
-git checkout -b feature/new-analysis-tool
-
-# Make your changes
-git add .
-git commit -m "feat: Add new technical analysis indicator"
-
-# Push to your fork
-git push origin feature/new-analysis-tool
-
-# Create pull request on GitHub
-```
-
----
-
-## 🧪 Testing
-
-### Test Structure
-
-```
-tests/
-├── unit/                    # Unit tests
-│   ├── test_api.py
-│   ├── test_agents.py
-│   └── test_utils.py
-├── integration/             # Integration tests
-│   ├── test_web_server.py
-│   └── test_data_flow.py
-├── e2e/                     # End-to-end tests
-│   └── test_user_journey.py
-├── fixtures/                # Test data
-│   ├── market_data.json
-│   └── news_samples.json
-└── conftest.py              # Pytest configuration
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-python -m pytest
-
-# Run specific test file
-python -m pytest tests/unit/test_api.py
-
-# Run with coverage
-python -m pytest --cov=src tests/
-
-# Run with verbose output
-python -m pytest -v
-
-# Run specific test function
-python -m pytest tests/unit/test_api.py::test_market_data_endpoint
-```
-
-### Writing Tests
-
-```python
-# tests/unit/test_market_analyzer.py
-import pytest
-from unittest.mock import Mock, patch
-from src.agents.market_analyzer import MarketAnalyzer
-
-class TestMarketAnalyzer:
-    
-    @pytest.fixture
-    def analyzer(self):
-        config = {"api_key": "test_key"}
-        return MarketAnalyzer(config)
-    
-    def test_fetch_market_data_success(self, analyzer):
-        # Arrange
-        symbol = "AAPL"
-        expected_data = {"price": 150.0, "volume": 1000000}
-        
-        # Act
-        with patch('src.utils.api_client.fetch_data') as mock_fetch:
-            mock_fetch.return_value = expected_data
-            result = analyzer.fetch_market_data(symbol)
-        
-        # Assert
-        assert result["price"] == 150.0
-        mock_fetch.assert_called_once_with(symbol)
-    
-    def test_fetch_market_data_invalid_symbol(self, analyzer):
-        # Test error handling
-        with pytest.raises(ValueError, match="Invalid symbol"):
-            analyzer.fetch_market_data("INVALID_SYMBOL_123")
-```
-
----
-
-## 🐛 Debugging Tools
-
-### 1. Python Debugging
-
-#### Built-in Debug Mode
-
-```python
-# Enable debug mode in web_server.py
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
-```
-
-#### Using Python Debugger
-
-```python
-import pdb
-
-def analyze_market_data(symbol):
-    data = fetch_data(symbol)
-    pdb.set_trace()  # Breakpoint
-    processed_data = process_data(data)
-    return processed_data
-```
-
-#### Logging Configuration
-
-```python
-import logging
-
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('debug.log'),
-        logging.StreamHandler()
-    ]
-)
 
 logger = logging.getLogger(__name__)
 
-def fetch_market_data(symbol):
-    logger.debug(f"Fetching data for symbol: {symbol}")
-    try:
-        data = api_call(symbol)
-        logger.info(f"Successfully fetched data for {symbol}")
-        return data
-    except Exception as e:
-        logger.error(f"Failed to fetch data for {symbol}: {e}")
-        raise
+
+class MarketAnalyzer:
+    """Analyzes market data with technical indicators.
+  
+    This class provides methods for processing market data and generating
+    technical analysis indicators including moving averages, RSI, MACD, etc.
+  
+    Attributes:
+        config: Configuration dictionary containing API keys and settings.
+        cache_timeout: Cache timeout in seconds for data storage.
+    """
+  
+    def __init__(self, config: Dict[str, str], cache_timeout: int = 300) -> None:
+        """Initialize MarketAnalyzer with configuration.
+      
+        Args:
+            config: Dictionary containing API configurations.
+            cache_timeout: Cache timeout in seconds.
+          
+        Raises:
+            ValueError: If required configuration keys are missing.
+        """
+        self.config = config
+        self.cache_timeout = cache_timeout
+        self._validate_config()
+      
+    def analyze_symbol(
+        self, 
+        symbol: str, 
+        period: str = "1y",
+        indicators: Optional[List[str]] = None
+    ) -> Dict[str, Union[float, Dict[str, float]]]:
+        """Analyze market data for a given symbol.
+      
+        Args:
+            symbol: Stock symbol (e.g., 'AAPL').
+            period: Analysis period ('1d', '1w', '1m', '3m', '1y').
+            indicators: List of technical indicators to calculate.
+          
+        Returns:
+            Dictionary containing analysis results with calculated indicators.
+          
+        Raises:
+            ValueError: If symbol format is invalid.
+            APIError: If market data retrieval fails.
+        """
+        if not self._validate_symbol(symbol):
+            raise ValueError(f"Invalid symbol format: {symbol}")
+          
+        logger.info(f"Starting analysis for symbol: {symbol}")
+      
+        try:
+            market_data = self._fetch_market_data(symbol, period)
+            analysis_results = self._calculate_indicators(market_data, indicators)
+          
+            logger.info(f"Analysis completed for {symbol}")
+            return analysis_results
+          
+        except Exception as e:
+            logger.error(f"Analysis failed for {symbol}: {str(e)}")
+            raise
 ```
 
-### 2. JavaScript Debugging
+#### JavaScript Standards
 
-#### Browser Developer Tools
+Follow modern ES6+ standards with the following guidelines:
 
-```javascript
-// Console debugging
-console.log('Market data:', marketData);
-console.error('API call failed:', error);
-console.warn('Using cached data');
+- **Module System**: Use ES6 modules with import/export
+- **Async/Await**: Prefer async/await over Promise chains
+- **Error Handling**: Implement comprehensive error handling
+- **Documentation**: JSDoc comments for all public methods
 
-// Debugger statement
-function analyzeMarketTrends(data) {
-    debugger; // Browser will pause here
-    const trends = processData(data);
-    return trends;
-}
-
-// Performance monitoring
-console.time('Data Processing');
-processMarketData(data);
-console.timeEnd('Data Processing');
-```
-
-#### Debug Helper Functions
+Example:
 
 ```javascript
-// Debug utilities in web/js/debug.js
-class DebugUtils {
-    static logAPICall(endpoint, params, response) {
-        if (window.DEBUG_MODE) {
-            console.group(`API Call: ${endpoint}`);
-            console.log('Parameters:', params);
-            console.log('Response:', response);
-            console.groupEnd();
-        }
+/**
+ * Market data management and visualization module.
+ * @module MarketManager
+ */
+
+/**
+ * Manages real-time market data and chart visualization.
+ */
+class MarketManager {
+    /**
+     * Create a MarketManager instance.
+     * @param {Object} config - Configuration object
+     * @param {string} config.apiBaseUrl - Base URL for API calls
+     * @param {number} config.refreshInterval - Data refresh interval in ms
+     */
+    constructor(config) {
+        this.config = config;
+        this.cache = new Map();
+        this.subscribers = new Set();
+        this.isInitialized = false;
     }
-    
-    static validateData(data, schema) {
-        // Data validation logic
-        if (window.DEBUG_MODE) {
-            console.log('Data validation:', { data, schema, valid: isValid });
-        }
-        return isValid;
-    }
-}
-
-// Usage
-DebugUtils.logAPICall('/api/market-data/AAPL', { period: '1y' }, response);
-```
-
-### 3. API Debugging
-
-#### Flask Debug Endpoints
-
-```python
-# Add debug endpoints in web_server.py
-@app.route('/debug/health')
-def debug_health():
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.now().isoformat(),
-        'version': '1.0.0',
-        'environment': os.getenv('FLASK_ENV', 'production')
-    })
-
-@app.route('/debug/api-status')
-def debug_api_status():
-    # Test all external API connections
-    status = {}
-    
-    # Test Alpha Vantage
-    try:
-        # API test call
-        status['alpha_vantage'] = 'connected'
-    except:
-        status['alpha_vantage'] = 'failed'
-    
-    return jsonify(status)
-
-@app.route('/debug/cache-stats')
-def debug_cache_stats():
-    # Return cache performance metrics
-    return jsonify({
-        'cache_hits': cache_hits,
-        'cache_misses': cache_misses,
-        'cache_size': len(cache_store)
-    })
-```
-
-#### API Testing with curl
-
-```bash
-# Test market data endpoint
-curl -X GET "http://localhost:5000/api/market-data/AAPL" \
-     -H "Accept: application/json"
-
-# Test with parameters
-curl -X GET "http://localhost:5000/api/chart-data/AAPL/1y" \
-     -H "Accept: application/json"
-
-# Test POST endpoint
-curl -X POST "http://localhost:5000/api/insider-analysis" \
-     -H "Content-Type: application/json" \
-     -d '{"symbol": "AAPL", "lookback_days": 90}'
-```
-
-### 4. Frontend Debugging
-
-#### Console Debug Commands
-
-Available in browser console on the web interface:
-
-```javascript
-// Test insider trading module
-window.InsiderTrading.debugInfo()
-window.InsiderTrading.testMockDataGeneration()
-window.InsiderTrading.testQuickAnalysis()
-
-// Test API connections
-window.API.testConnection()
-
-// Test watchlist functionality
-app.debugWatchlist()
-
-// Manual data refresh
-app.refreshAllData()
-
-// Check application state
-console.log('App state:', {
-    currentPage: app.currentPage,
-    watchlist: app.watchlist,
-    settings: app.settings
-});
-```
-
----
-
-## 🔌 API Development
-
-### Adding New Endpoints
-
-1. **Define the endpoint in Flask** (`web_server.py`):
-
-```python
-@app.route('/api/new-feature/<symbol>', methods=['GET'])
-def get_new_feature(symbol):
-    try:
-        # Validate input
-        if not symbol or len(symbol) > 5:
-            return jsonify({'error': 'Invalid symbol'}), 400
-        
-        # Process request
-        data = process_new_feature(symbol)
-        
-        # Return response
-        return jsonify({
-            'symbol': symbol,
-            'data': data,
-            'timestamp': datetime.now().isoformat()
-        })
-    
-    except Exception as e:
-        logger.error(f"Error in new feature endpoint: {e}")
-        return jsonify({'error': 'Internal server error'}), 500
-
-def process_new_feature(symbol):
-    # Business logic here
-    pass
-```
-
-2. **Add corresponding FastAPI endpoint** (`src/api.py`):
-
-```python
-from pydantic import BaseModel
-
-class NewFeatureRequest(BaseModel):
-    symbol: str
-    parameters: Optional[Dict[str, Any]] = {}
-
-class NewFeatureResponse(BaseModel):
-    symbol: str
-    data: Dict[str, Any]
-    timestamp: str
-
-@app.post("/api/new-feature", response_model=NewFeatureResponse)
-async def new_feature_endpoint(request: NewFeatureRequest):
-    try:
-        data = await process_new_feature_async(request.symbol, request.parameters)
-        return NewFeatureResponse(
-            symbol=request.symbol,
-            data=data,
-            timestamp=datetime.now().isoformat()
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-```
-
-3. **Create frontend integration** (`web/js/api.js`):
-
-```javascript
-class API {
-    static async getNewFeature(symbol, params = {}) {
+  
+    /**
+     * Fetch market data for a specific symbol.
+     * @param {string} symbol - Stock symbol
+     * @param {string} period - Time period for data
+     * @returns {Promise<Object>} Market data object
+     * @throws {Error} When API call fails or data is invalid
+     */
+    async fetchMarketData(symbol, period = '1y') {
         try {
-            const response = await fetch(`/api/new-feature/${symbol}`, {
+            this._validateSymbol(symbol);
+          
+            const cacheKey = `${symbol}-${period}`;
+            if (this.cache.has(cacheKey)) {
+                return this.cache.get(cacheKey);
+            }
+          
+            const url = `${this.config.apiBaseUrl}/market-data/${symbol}`;
+            const response = await fetch(url, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
-            
+          
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            
-            return await response.json();
+          
+            const data = await response.json();
+            this._validateMarketData(data);
+          
+            this.cache.set(cacheKey, data);
+            return data;
+          
         } catch (error) {
-            console.error('API call failed:', error);
-            throw error;
+            console.error(`Failed to fetch market data for ${symbol}:`, error);
+            throw new Error(`Market data fetch failed: ${error.message}`);
         }
     }
-}
-```
-
-### Error Handling Best Practices
-
-```python
-# Standardized error responses
-class APIError(Exception):
-    def __init__(self, message, status_code=500, payload=None):
-        super().__init__(message)
-        self.message = message
-        self.status_code = status_code
-        self.payload = payload
-
-@app.errorhandler(APIError)
-def handle_api_error(error):
-    response = {
-        'error': error.message,
-        'timestamp': datetime.now().isoformat()
-    }
-    if error.payload:
-        response.update(error.payload)
-    
-    return jsonify(response), error.status_code
-
-# Usage in endpoints
-@app.route('/api/data/<symbol>')
-def get_data(symbol):
-    if not validate_symbol(symbol):
-        raise APIError('Invalid symbol format', 400)
-    
-    try:
-        data = fetch_external_data(symbol)
-    except ExternalAPIError as e:
-        raise APIError('External service unavailable', 503)
-    
-    return jsonify(data)
-```
-
----
-
-## 🎨 Frontend Development
-
-### Adding New UI Components
-
-1. **HTML Structure** (`web/index.html`):
-
-```html
-<!-- New Component Section -->
-<div id="new-component-page" class="page">
-    <div class="page-header">
-        <h1 class="page-title">
-            <i class="fas fa-chart-bar"></i>
-            New Component
-        </h1>
-        <div class="component-controls">
-            <input type="text" id="component-input" placeholder="Enter symbol...">
-            <button class="btn btn-primary" id="component-analyze">
-                <i class="fas fa-search"></i>
-                Analyze
-            </button>
-        </div>
-    </div>
-    
-    <div class="component-content">
-        <div class="component-loading hidden" id="component-loading">
-            <div class="loading-spinner"></div>
-            <p>Loading data...</p>
-        </div>
-        
-        <div class="component-results" id="component-results">
-            <!-- Results will be populated here -->
-        </div>
-    </div>
-</div>
-```
-
-2. **CSS Styling** (`web/css/styles.css`):
-
-```css
-/* New Component Styles */
-.component-content {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-lg);
-    padding: var(--space-lg);
-}
-
-.component-controls {
-    display: flex;
-    gap: var(--space-sm);
-    align-items: center;
-}
-
-.component-results {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border-radius: var(--radius-lg);
-    padding: var(--space-lg);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.component-chart {
-    height: 400px;
-    width: 100%;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-    .component-controls {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .component-chart {
-        height: 300px;
-    }
-}
-```
-
-3. **JavaScript Functionality** (`web/js/new-component.js`):
-
-```javascript
-class NewComponentManager {
-    constructor() {
-        this.currentData = null;
-        this.isLoading = false;
-        this.init();
-    }
-    
-    init() {
-        this.setupEventListeners();
-        console.log('New Component Manager initialized');
-    }
-    
-    setupEventListeners() {
-        const analyzeBtn = document.getElementById('component-analyze');
-        const input = document.getElementById('component-input');
-        
-        if (analyzeBtn) {
-            analyzeBtn.addEventListener('click', () => this.runAnalysis());
+  
+    /**
+     * Validate stock symbol format.
+     * @private
+     * @param {string} symbol - Symbol to validate
+     * @throws {Error} When symbol format is invalid
+     */
+    _validateSymbol(symbol) {
+        if (!symbol || typeof symbol !== 'string') {
+            throw new Error('Symbol must be a non-empty string');
         }
-        
-        if (input) {
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.runAnalysis();
-                }
-            });
-        }
-    }
-    
-    async runAnalysis() {
-        const input = document.getElementById('component-input');
-        const symbol = input?.value?.trim()?.toUpperCase();
-        
-        if (!symbol) {
-            this.showError('Please enter a symbol');
-            return;
-        }
-        
-        try {
-            this.showLoading();
-            const data = await this.fetchComponentData(symbol);
-            this.displayResults(data);
-        } catch (error) {
-            console.error('Analysis failed:', error);
-            this.showError('Analysis failed. Please try again.');
-        }
-    }
-    
-    async fetchComponentData(symbol) {
-        const response = await fetch(`/api/new-feature/${symbol}`);
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        return await response.json();
-    }
-    
-    displayResults(data) {
-        const resultsContainer = document.getElementById('component-results');
-        if (!resultsContainer) return;
-        
-        resultsContainer.innerHTML = `
-            <div class="component-summary">
-                <h3>Analysis Results for ${data.symbol}</h3>
-                <div class="metrics-grid">
-                    ${this.renderMetrics(data)}
-                </div>
-            </div>
-            <div class="component-chart" id="component-chart"></div>
-        `;
-        
-        this.renderChart(data);
-        this.hideLoading();
-    }
-    
-    renderMetrics(data) {
-        return Object.entries(data.metrics || {})
-            .map(([key, value]) => `
-                <div class="metric-item">
-                    <span class="metric-label">${key}</span>
-                    <span class="metric-value">${value}</span>
-                </div>
-            `).join('');
-    }
-    
-    renderChart(data) {
-        const chartContainer = document.getElementById('component-chart');
-        if (!chartContainer || !data.chartData) return;
-        
-        const trace = {
-            x: data.chartData.dates,
-            y: data.chartData.values,
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: data.symbol,
-            line: { color: '#00d2ff', width: 2 }
-        };
-        
-        const layout = {
-            paper_bgcolor: 'transparent',
-            plot_bgcolor: 'transparent',
-            font: { color: '#ffffff' },
-            margin: { t: 20, r: 20, b: 40, l: 60 }
-        };
-        
-        Plotly.newPlot(chartContainer, [trace], layout, {
-            displayModeBar: false,
-            responsive: true
-        });
-    }
-    
-    showLoading() {
-        this.isLoading = true;
-        const loading = document.getElementById('component-loading');
-        const results = document.getElementById('component-results');
-        
-        if (loading) loading.classList.remove('hidden');
-        if (results) results.style.display = 'none';
-    }
-    
-    hideLoading() {
-        this.isLoading = false;
-        const loading = document.getElementById('component-loading');
-        const results = document.getElementById('component-results');
-        
-        if (loading) loading.classList.add('hidden');
-        if (results) results.style.display = 'block';
-    }
-    
-    showError(message) {
-        this.hideLoading();
-        // Show error notification
-        if (window.app) {
-            window.app.showNotification('error', 'Error', message);
+      
+        const symbolRegex = /^[A-Z]{1,5}$/;
+        if (!symbolRegex.test(symbol)) {
+            throw new Error('Symbol must be 1-5 uppercase letters');
         }
     }
 }
 
-// Initialize component
-const newComponentManager = new NewComponentManager();
-window.NewComponent = newComponentManager;
+export default MarketManager;
 ```
 
-### Chart Integration
+### Git Workflow Standards
 
-Using Plotly.js for interactive charts:
+#### Branch Naming Convention
 
-```javascript
-// Chart configuration template
-const createChart = (containerId, data, options = {}) => {
-    const defaultLayout = {
-        paper_bgcolor: 'transparent',
-        plot_bgcolor: 'transparent',
-        font: { 
-            color: '#ffffff',
-            family: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
-        },
-        xaxis: {
-            gridcolor: 'rgba(255, 255, 255, 0.1)',
-            color: '#b3b8c8'
-        },
-        yaxis: {
-            gridcolor: 'rgba(255, 255, 255, 0.1)',
-            color: '#b3b8c8'
-        },
-        margin: { t: 20, r: 20, b: 40, l: 60 },
-        ...options.layout
-    };
-    
-    const config = {
-        displayModeBar: false,
-        responsive: true,
-        ...options.config
-    };
-    
-    return Plotly.newPlot(containerId, data, defaultLayout, config);
-};
-```
+- **Feature branches**: `feature/description-of-feature`
+- **Bug fixes**: `fix/description-of-bug`
+- **Documentation**: `docs/description-of-changes`
+- **Refactoring**: `refactor/description-of-refactor`
 
----
+#### Commit Message Standards
 
-## 🚀 Deployment & Production
-
-### Production Checklist
-
-Before deploying to production:
-
-- [ ] All sensitive data removed from repository
-- [ ] Environment variables properly configured
-- [ ] Error handling implemented
-- [ ] Logging configured appropriately
-- [ ] Performance optimizations applied
-- [ ] Security headers configured
-- [ ] Rate limiting implemented
-- [ ] Health checks added
-- [ ] Monitoring setup
-- [ ] Backup strategy in place
-
-### Docker Production Build
-
-```dockerfile
-# Multi-stage production build
-FROM python:3.9-slim as builder
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-FROM python:3.9-slim as production
-
-WORKDIR /app
-COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
-COPY . .
-
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash app
-USER app
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/debug/health || exit 1
-
-EXPOSE 5000
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "web_server:app"]
-```
-
-### Environment-Specific Configuration
-
-```python
-# config.py
-import os
-
-class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key'
-    DEBUG = False
-    TESTING = False
-
-class DevelopmentConfig(Config):
-    DEBUG = True
-    LOG_LEVEL = 'DEBUG'
-
-class ProductionConfig(Config):
-    LOG_LEVEL = 'INFO'
-    # Production-specific settings
-
-class TestingConfig(Config):
-    TESTING = True
-    LOG_LEVEL = 'ERROR'
-
-config = {
-    'development': DevelopmentConfig,
-    'production': ProductionConfig,
-    'testing': TestingConfig,
-    'default': DevelopmentConfig
-}
-```
-
----
-
-## 🔧 Troubleshooting
-
-### Common Issues and Solutions
-
-#### 1. API Connection Failures
-
-**Problem**: External APIs returning errors or timeouts
-
-**Solutions**:
-```python
-# Implement retry logic with exponential backoff
-import time
-from functools import wraps
-
-def retry_with_backoff(max_retries=3, backoff_factor=2):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            for attempt in range(max_retries):
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    if attempt == max_retries - 1:
-                        raise e
-                    wait_time = backoff_factor ** attempt
-                    time.sleep(wait_time)
-            return None
-        return wrapper
-    return decorator
-
-@retry_with_backoff()
-def fetch_external_data(symbol):
-    # API call logic
-    pass
-```
-
-#### 2. Frontend JavaScript Errors
-
-**Problem**: Console errors or broken functionality
-
-**Debug Steps**:
-1. Open browser Developer Tools (F12)
-2. Check Console tab for errors
-3. Verify network requests in Network tab
-4. Use browser debugger with breakpoints
-
-**Common Fixes**:
-```javascript
-// Null reference protection
-const element = document.getElementById('some-element');
-if (element) {
-    element.addEventListener('click', handler);
-}
-
-// Async error handling
-async function safeApiCall() {
-    try {
-        const response = await fetch('/api/data');
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('API call failed:', error);
-        return null; // or default data
-    }
-}
-```
-
-#### 3. Python Import Errors
-
-**Problem**: Module not found or import errors
-
-**Solutions**:
-```bash
-# Verify virtual environment is activated
-which python
-which pip
-
-# Reinstall dependencies
-pip install -r requirements.txt
-
-# Check Python path
-python -c "import sys; print(sys.path)"
-
-# Add project root to Python path
-export PYTHONPATH="${PYTHONPATH}:$(pwd)"
-```
-
-#### 4. Data Loading Issues
-
-**Problem**: Charts not rendering or data not displaying
-
-**Debug Steps**:
-1. Check browser network tab for failed requests
-2. Verify API responses contain expected data structure
-3. Check console for JavaScript errors
-4. Validate data format matches chart expectations
-
-#### 5. Performance Issues
-
-**Problem**: Slow loading or unresponsive interface
-
-**Optimization Strategies**:
-```python
-# Implement caching
-from functools import lru_cache
-import redis
-
-# Memory cache for small data
-@lru_cache(maxsize=128)
-def get_company_info(symbol):
-    return fetch_company_data(symbol)
-
-# Redis cache for larger data
-redis_client = redis.Redis(host='localhost', port=6379, db=0)
-
-def cached_market_data(symbol, period):
-    cache_key = f"market_data:{symbol}:{period}"
-    cached_data = redis_client.get(cache_key)
-    
-    if cached_data:
-        return json.loads(cached_data)
-    
-    data = fetch_market_data(symbol, period)
-    redis_client.setex(cache_key, 300, json.dumps(data))  # 5 min cache
-    return data
-```
-
----
-
-## 📝 Submitting Changes
-
-### Pull Request Process
-
-1. **Ensure your fork is up to date**:
-   ```bash
-   git remote add upstream https://github.com/original/financial-research-assistant.git
-   git fetch upstream
-   git checkout main
-   git merge upstream/main
-   ```
-
-2. **Create a feature branch**:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-3. **Make your changes and commit**:
-   ```bash
-   git add .
-   git commit -m "feat: add new technical indicator analysis"
-   ```
-
-4. **Write comprehensive tests**:
-   ```bash
-   python -m pytest tests/ -v
-   ```
-
-5. **Push to your fork**:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-6. **Create pull request on GitHub**
-
-### Commit Message Convention
-
-We follow the **Conventional Commits** specification:
+Follow Conventional Commits specification:
 
 ```
 type(scope): description
@@ -1311,116 +415,1070 @@ type(scope): description
 ```
 
 **Types**:
-- `feat`: New feature
+
+- `feat`: New feature implementation
 - `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, etc.)
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
+- `docs`: Documentation updates
+- `style`: Code formatting changes
+- `refactor`: Code refactoring without feature changes
+- `test`: Test additions or modifications
 - `chore`: Maintenance tasks
 
 **Examples**:
+
+```
+feat(agents): implement portfolio risk assessment agent
+fix(api): resolve market data caching issue
+docs(contributing): update development setup instructions
+test(utils): add comprehensive validation tests
+```
+
+## Testing Requirements
+
+### Test Architecture
+
+Tests are organized into three categories:
+
+#### Unit Tests
+
+- **Location**: `src/tests/unit/`
+- **Purpose**: Test individual functions and classes in isolation
+- **Coverage**: Minimum 90% code coverage required
+
+#### Integration Tests
+
+- **Location**: `src/tests/integration/`
+- **Purpose**: Test component interactions and API endpoints
+- **Requirements**: Test with mock external services
+
+#### End-to-End Tests
+
+- **Location**: `src/tests/e2e/`
+- **Purpose**: Test complete user workflows
+- **Tools**: Selenium WebDriver for browser automation
+
+### Testing Standards
+
+#### Pytest Configuration (`pytest.ini`)
+
+```ini
+[tool:pytest]
+testpaths = src/tests
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+addopts = 
+    --strict-markers
+    --strict-config
+    --verbose
+    --cov=src
+    --cov-report=html
+    --cov-report=term-missing
+    --cov-fail-under=90
+markers =
+    unit: Unit tests
+    integration: Integration tests
+    e2e: End-to-end tests
+    slow: Slow running tests
+```
+
+#### Test Implementation Example
+
+```python
+"""
+Unit tests for market data analyzer.
+"""
+
+import pytest
+from unittest.mock import Mock, patch, MagicMock
+from datetime import datetime, timedelta
+
+from src.agents.market_analyzer import MarketAnalyzer
+from src.utils.exceptions import ValidationError, APIError
+
+
+class TestMarketAnalyzer:
+    """Test suite for MarketAnalyzer class."""
+  
+    @pytest.fixture
+    def analyzer_config(self):
+        """Provide test configuration for MarketAnalyzer."""
+        return {
+            'api_key': 'test_api_key',
+            'base_url': 'https://test-api.example.com',
+            'timeout': 30
+        }
+  
+    @pytest.fixture
+    def market_analyzer(self, analyzer_config):
+        """Provide MarketAnalyzer instance for testing."""
+        return MarketAnalyzer(analyzer_config)
+  
+    @pytest.fixture
+    def sample_market_data(self):
+        """Provide sample market data for testing."""
+        return {
+            'symbol': 'AAPL',
+            'price': 150.25,
+            'volume': 1000000,
+            'timestamp': datetime.now().isoformat()
+        }
+  
+    def test_analyzer_initialization_success(self, analyzer_config):
+        """Test successful analyzer initialization."""
+        analyzer = MarketAnalyzer(analyzer_config)
+        assert analyzer.config == analyzer_config
+        assert analyzer.cache_timeout == 300  # default value
+  
+    def test_analyzer_initialization_missing_config(self):
+        """Test analyzer initialization with missing configuration."""
+        with pytest.raises(ValueError, match="Missing required configuration"):
+            MarketAnalyzer({})
+  
+    @patch('src.agents.market_analyzer.external_api_call')
+    def test_analyze_symbol_success(self, mock_api_call, market_analyzer, sample_market_data):
+        """Test successful symbol analysis."""
+        # Arrange
+        mock_api_call.return_value = sample_market_data
+        symbol = 'AAPL'
+      
+        # Act
+        result = market_analyzer.analyze_symbol(symbol)
+      
+        # Assert
+        assert result['symbol'] == symbol
+        assert 'technical_indicators' in result
+        mock_api_call.assert_called_once_with(symbol, '1y')
+  
+    def test_analyze_symbol_invalid_format(self, market_analyzer):
+        """Test symbol analysis with invalid symbol format."""
+        invalid_symbols = ['', 'TOOLONG', '123', 'aa', None]
+      
+        for symbol in invalid_symbols:
+            with pytest.raises(ValueError, match="Invalid symbol format"):
+                market_analyzer.analyze_symbol(symbol)
+  
+    @patch('src.agents.market_analyzer.external_api_call')
+    def test_analyze_symbol_api_failure(self, mock_api_call, market_analyzer):
+        """Test symbol analysis when external API fails."""
+        # Arrange
+        mock_api_call.side_effect = APIError("External service unavailable")
+      
+        # Act & Assert
+        with pytest.raises(APIError):
+            market_analyzer.analyze_symbol('AAPL')
+  
+    @pytest.mark.integration
+    def test_full_analysis_workflow(self, market_analyzer):
+        """Integration test for complete analysis workflow."""
+        # This test would use actual API calls in integration environment
+        pass
+  
+    @pytest.mark.slow
+    def test_performance_large_dataset(self, market_analyzer):
+        """Test analyzer performance with large datasets."""
+        # Performance testing code
+        pass
+```
+
+### Test Execution
+
 ```bash
-feat(api): add insider trading analysis endpoint
-fix(ui): resolve watchlist refresh issue
-docs(readme): update installation instructions
-test(analyzer): add unit tests for market data processing
+# Run all tests
+pytest
+
+# Run specific test categories
+pytest -m unit
+pytest -m integration
+pytest -m "not slow"
+
+# Run with coverage report
+pytest --cov=src --cov-report=html
+
+# Run specific test file
+pytest src/tests/unit/test_market_analyzer.py
+
+# Run with verbose output and debugging
+pytest -v -s --pdb
 ```
 
-### Pull Request Template
+## API Development Guidelines
 
-When creating a pull request, please include:
+### API Design Principles
 
-```markdown
-## Description
-Brief description of the changes made.
+1. **RESTful Design**: Follow REST conventions for resource-based URLs
+2. **Stateless**: Each request must contain all necessary information
+3. **Idempotent**: GET, PUT, DELETE operations should be idempotent
+4. **Versioning**: Use URL versioning (e.g., `/api/v1/`)
+5. **Error Handling**: Consistent error response format
 
-## Type of Change
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
+### Endpoint Implementation
 
-## Testing
-- [ ] All new and existing tests pass
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] Manual testing completed
+#### Flask Route Example
 
-## Screenshots (if applicable)
-Add screenshots to help explain your changes.
+```python
+"""
+API routes for market data endpoints.
+"""
 
-## Checklist
-- [ ] My code follows the project's style guidelines
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
+from flask import Blueprint, request, jsonify
+from typing import Dict, Any
+import logging
+
+from src.agents.market_analyzer import MarketAnalyzer
+from src.utils.validation import validate_symbol, validate_period
+from src.utils.exceptions import ValidationError, APIError
+from src.utils.auth import require_auth, get_current_user
+
+logger = logging.getLogger(__name__)
+api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
+
+
+@api_bp.route('/market-data/<symbol>', methods=['GET'])
+@require_auth
+def get_market_data(symbol: str) -> Dict[str, Any]:
+    """
+    Retrieve market data for a specific symbol.
+  
+    Args:
+        symbol: Stock symbol (path parameter)
+      
+    Query Parameters:
+        period: Time period (1d, 1w, 1m, 3m, 1y)
+        indicators: Comma-separated list of technical indicators
+      
+    Returns:
+        JSON response with market data and analysis
+      
+    Raises:
+        400: Invalid symbol or parameters
+        401: Authentication required
+        404: Symbol not found
+        500: Internal server error
+    """
+    try:
+        # Validate input parameters
+        if not validate_symbol(symbol):
+            return jsonify({
+                'error': 'Invalid symbol format',
+                'message': 'Symbol must be 1-5 uppercase letters',
+                'timestamp': datetime.now().isoformat()
+            }), 400
+      
+        period = request.args.get('period', '1y')
+        if not validate_period(period):
+            return jsonify({
+                'error': 'Invalid period',
+                'message': 'Period must be one of: 1d, 1w, 1m, 3m, 1y',
+                'timestamp': datetime.now().isoformat()
+            }), 400
+      
+        indicators = request.args.get('indicators', '').split(',') if request.args.get('indicators') else None
+      
+        # Get current user context
+        user = get_current_user()
+      
+        # Process request
+        analyzer = MarketAnalyzer(current_app.config['MARKET_CONFIG'])
+        result = analyzer.analyze_symbol(
+            symbol=symbol,
+            period=period,
+            indicators=indicators
+        )
+      
+        # Add metadata
+        response_data = {
+            'symbol': symbol,
+            'period': period,
+            'data': result,
+            'metadata': {
+                'timestamp': datetime.now().isoformat(),
+                'user_id': user.id if user else None,
+                'request_id': request.headers.get('X-Request-ID')
+            }
+        }
+      
+        logger.info(f"Market data request completed for {symbol}", extra={
+            'symbol': symbol,
+            'period': period,
+            'user_id': user.id if user else None
+        })
+      
+        return jsonify(response_data), 200
+      
+    except ValidationError as e:
+        logger.warning(f"Validation error for symbol {symbol}: {str(e)}")
+        return jsonify({
+            'error': 'Validation failed',
+            'message': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 400
+      
+    except APIError as e:
+        logger.error(f"API error for symbol {symbol}: {str(e)}")
+        return jsonify({
+            'error': 'External service error',
+            'message': 'Unable to retrieve market data',
+            'timestamp': datetime.now().isoformat()
+        }), 503
+      
+    except Exception as e:
+        logger.error(f"Unexpected error for symbol {symbol}: {str(e)}", exc_info=True)
+        return jsonify({
+            'error': 'Internal server error',
+            'message': 'An unexpected error occurred',
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+
+@api_bp.errorhandler(404)
+def handle_not_found(e):
+    """Handle 404 errors with consistent format."""
+    return jsonify({
+        'error': 'Resource not found',
+        'message': 'The requested resource was not found',
+        'timestamp': datetime.now().isoformat()
+    }), 404
+
+
+@api_bp.errorhandler(500)
+def handle_internal_error(e):
+    """Handle 500 errors with consistent format."""
+    return jsonify({
+        'error': 'Internal server error',
+        'message': 'An internal error occurred',
+        'timestamp': datetime.now().isoformat()
+    }), 500
 ```
-
----
-
-## 📚 Additional Resources
-
-### Documentation
-- [Python Official Documentation](https://docs.python.org/3/)
-- [Flask Documentation](https://flask.palletsprojects.com/)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Plotly.js Documentation](https://plotly.com/javascript/)
 
 ### API Documentation
-- [Alpha Vantage API](https://www.alphavantage.co/documentation/)
-- [Finnhub API](https://finnhub.io/docs/api)
-- [News API](https://newsapi.org/docs)
 
-### Tools and Libraries
-- [LangGraph Documentation](https://github.com/langchain-ai/langgraph)
-- [Pandas Documentation](https://pandas.pydata.org/docs/)
-- [TA-Lib Documentation](https://ta-lib.org/)
+All endpoints must include comprehensive OpenAPI documentation:
 
----
-
-## 🆘 Getting Help
-
-If you encounter issues or have questions:
-
-1. **Check existing issues** on GitHub
-2. **Search the documentation** for relevant information
-3. **Ask in GitHub Discussions** for general questions
-4. **Create a new issue** for bugs or feature requests
-
-### Issue Template
-
-When reporting bugs, please include:
-
-```markdown
-**Bug Description**
-A clear and concise description of what the bug is.
-
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
-
-**Expected Behavior**
-A clear and concise description of what you expected to happen.
-
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
-
-**Environment:**
-- OS: [e.g. Windows 10, macOS 12.0, Ubuntu 20.04]
-- Python Version: [e.g. 3.9.7]
-- Browser: [e.g. Chrome 96, Firefox 94]
-- Version: [e.g. 1.0.0]
-
-**Additional Context**
-Add any other context about the problem here.
+```python
+@api_bp.route('/market-data/<symbol>', methods=['GET'])
+def get_market_data(symbol: str):
+    """
+    Get Market Data
+    ---
+    tags:
+      - Market Data
+    parameters:
+      - name: symbol
+        in: path
+        type: string
+        required: true
+        description: Stock symbol (1-5 uppercase letters)
+        example: AAPL
+      - name: period
+        in: query
+        type: string
+        required: false
+        description: Time period for data
+        enum: [1d, 1w, 1m, 3m, 1y]
+        default: 1y
+      - name: indicators
+        in: query
+        type: string
+        required: false
+        description: Comma-separated technical indicators
+        example: sma,rsi,macd
+    responses:
+      200:
+        description: Market data retrieved successfully
+        schema:
+          type: object
+          properties:
+            symbol:
+              type: string
+              example: AAPL
+            data:
+              type: object
+              properties:
+                price:
+                  type: number
+                  example: 150.25
+                volume:
+                  type: integer
+                  example: 1000000
+      400:
+        description: Invalid input parameters
+      401:
+        description: Authentication required
+      500:
+        description: Internal server error
+    """
 ```
 
----
+## Frontend Development Standards
 
-Thank you for contributing to the Financial Research Assistant! Your contributions help make this tool better for everyone in the financial analysis community. 🚀 
+### Component Architecture
+
+Frontend components follow a modular, event-driven architecture:
+
+```javascript
+/**
+ * Base component class for all UI components.
+ * @abstract
+ */
+class BaseComponent {
+    /**
+     * Create a component instance.
+     * @param {HTMLElement} container - Container element
+     * @param {Object} options - Component options
+     */
+    constructor(container, options = {}) {
+        this.container = container;
+        this.options = { ...this.getDefaultOptions(), ...options };
+        this.state = {};
+        this.eventListeners = new Map();
+        this.isInitialized = false;
+    }
+  
+    /**
+     * Get default component options.
+     * @abstract
+     * @returns {Object} Default options
+     */
+    getDefaultOptions() {
+        return {};
+    }
+  
+    /**
+     * Initialize the component.
+     * @async
+     * @returns {Promise<void>}
+     */
+    async init() {
+        if (this.isInitialized) {
+            return;
+        }
+      
+        try {
+            await this.render();
+            this.attachEventListeners();
+            this.isInitialized = true;
+            this.emit('initialized');
+        } catch (error) {
+            console.error(`Failed to initialize component:`, error);
+            throw error;
+        }
+    }
+  
+    /**
+     * Render component HTML.
+     * @abstract
+     * @async
+     * @returns {Promise<void>}
+     */
+    async render() {
+        throw new Error('render() method must be implemented');
+    }
+  
+    /**
+     * Attach event listeners.
+     * @abstract
+     */
+    attachEventListeners() {
+        // Override in subclasses
+    }
+  
+    /**
+     * Update component state.
+     * @param {Object} newState - New state properties
+     */
+    setState(newState) {
+        const oldState = { ...this.state };
+        this.state = { ...this.state, ...newState };
+        this.onStateChange(this.state, oldState);
+    }
+  
+    /**
+     * Handle state changes.
+     * @param {Object} newState - New state
+     * @param {Object} oldState - Previous state
+     */
+    onStateChange(newState, oldState) {
+        // Override in subclasses
+    }
+  
+    /**
+     * Emit custom event.
+     * @param {string} eventName - Event name
+     * @param {*} data - Event data
+     */
+    emit(eventName, data = null) {
+        const event = new CustomEvent(eventName, { detail: data });
+        this.container.dispatchEvent(event);
+    }
+  
+    /**
+     * Destroy component and clean up resources.
+     */
+    destroy() {
+        this.eventListeners.forEach((listener, element) => {
+            element.removeEventListener(listener.event, listener.handler);
+        });
+        this.eventListeners.clear();
+        this.isInitialized = false;
+    }
+}
+```
+
+### Chart Implementation Standards
+
+```javascript
+/**
+ * Market chart component for data visualization.
+ * @extends BaseComponent
+ */
+class MarketChart extends BaseComponent {
+    getDefaultOptions() {
+        return {
+            theme: 'dark',
+            responsive: true,
+            height: 400,
+            showToolbar: false,
+            indicators: ['sma', 'volume']
+        };
+    }
+  
+    async render() {
+        this.container.innerHTML = `
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3 class="chart-title" id="chart-title">Loading...</h3>
+                    <div class="chart-controls">
+                        <select id="period-select" class="chart-select">
+                            <option value="1d">1 Day</option>
+                            <option value="1w">1 Week</option>
+                            <option value="1m">1 Month</option>
+                            <option value="3m">3 Months</option>
+                            <option value="1y" selected>1 Year</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-content" id="chart-content"></div>
+                <div class="chart-loading hidden" id="chart-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading chart data...</p>
+                </div>
+            </div>
+        `;
+    }
+  
+    attachEventListeners() {
+        const periodSelect = this.container.querySelector('#period-select');
+        if (periodSelect) {
+            periodSelect.addEventListener('change', (e) => {
+                this.updatePeriod(e.target.value);
+            });
+        }
+    }
+  
+    /**
+     * Update chart with new data.
+     * @param {string} symbol - Stock symbol
+     * @param {Object} data - Chart data
+     */
+    async updateChart(symbol, data) {
+        try {
+            this.showLoading();
+          
+            const chartData = this.prepareChartData(data);
+            const layout = this.getChartLayout();
+            const config = this.getChartConfig();
+          
+            await Plotly.newPlot(
+                this.container.querySelector('#chart-content'),
+                chartData,
+                layout,
+                config
+            );
+          
+            this.updateTitle(symbol);
+            this.hideLoading();
+          
+            this.emit('chartUpdated', { symbol, data });
+          
+        } catch (error) {
+            console.error('Failed to update chart:', error);
+            this.showError('Failed to load chart data');
+        }
+    }
+  
+    prepareChartData(data) {
+        return [{
+            x: data.dates,
+            y: data.prices,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Price',
+            line: {
+                color: '#00d2ff',
+                width: 2
+            }
+        }];
+    }
+  
+    getChartLayout() {
+        return {
+            paper_bgcolor: 'transparent',
+            plot_bgcolor: 'transparent',
+            font: { 
+                color: '#ffffff',
+                family: 'Inter, sans-serif'
+            },
+            xaxis: {
+                gridcolor: 'rgba(255, 255, 255, 0.1)',
+                color: '#b3b8c8'
+            },
+            yaxis: {
+                gridcolor: 'rgba(255, 255, 255, 0.1)',
+                color: '#b3b8c8'
+            },
+            margin: { t: 20, r: 20, b: 40, l: 60 },
+            height: this.options.height
+        };
+    }
+  
+    getChartConfig() {
+        return {
+            displayModeBar: this.options.showToolbar,
+            responsive: this.options.responsive,
+            displaylogo: false
+        };
+    }
+  
+    showLoading() {
+        const loading = this.container.querySelector('#chart-loading');
+        const content = this.container.querySelector('#chart-content');
+      
+        if (loading) loading.classList.remove('hidden');
+        if (content) content.style.opacity = '0.3';
+    }
+  
+    hideLoading() {
+        const loading = this.container.querySelector('#chart-loading');
+        const content = this.container.querySelector('#chart-content');
+      
+        if (loading) loading.classList.add('hidden');
+        if (content) content.style.opacity = '1';
+    }
+  
+    showError(message) {
+        this.container.querySelector('#chart-content').innerHTML = `
+            <div class="chart-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>${message}</p>
+                <button class="btn btn-secondary" onclick="location.reload()">
+                    Retry
+                </button>
+            </div>
+        `;
+        this.hideLoading();
+    }
+}
+```
+
+## Quality Assurance
+
+### Code Quality Tools
+
+#### Linting Configuration (`.flake8`)
+
+```ini
+[flake8]
+max-line-length = 88
+select = E,W,F
+ignore = 
+    E203,  # whitespace before ':'
+    E501,  # line too long (handled by black)
+    W503,  # line break before binary operator
+exclude = 
+    .git,
+    __pycache__,
+    venv,
+    .venv,
+    build,
+    dist,
+    *.egg-info
+```
+
+#### Pre-commit Configuration (`.pre-commit-config.yaml`)
+
+```yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+    
+  - repo: https://github.com/psf/black
+    rev: 22.12.0
+    hooks:
+      - id: black
+        language_version: python3
+      
+  - repo: https://github.com/pycqa/isort
+    rev: 5.11.4
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+      
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+      
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.991
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-all]
+```
+
+### Performance Standards
+
+#### Performance Monitoring
+
+```python
+"""
+Performance monitoring utilities.
+"""
+
+import time
+import functools
+import logging
+from typing import Callable, Any
+
+logger = logging.getLogger(__name__)
+
+
+def monitor_performance(threshold_seconds: float = 1.0):
+    """
+    Decorator to monitor function execution time.
+  
+    Args:
+        threshold_seconds: Log warning if execution exceeds this threshold
+    """
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs) -> Any:
+            start_time = time.time()
+            try:
+                result = func(*args, **kwargs)
+                return result
+            finally:
+                execution_time = time.time() - start_time
+              
+                if execution_time > threshold_seconds:
+                    logger.warning(
+                        f"Function {func.__name__} took {execution_time:.2f}s "
+                        f"(threshold: {threshold_seconds}s)"
+                    )
+                else:
+                    logger.debug(f"Function {func.__name__} took {execution_time:.2f}s")
+                  
+        return wrapper
+    return decorator
+
+
+class PerformanceTracker:
+    """Track and report application performance metrics."""
+  
+    def __init__(self):
+        self.metrics = {}
+      
+    def record_metric(self, name: str, value: float, unit: str = 'ms'):
+        """Record a performance metric."""
+        if name not in self.metrics:
+            self.metrics[name] = []
+        self.metrics[name].append({'value': value, 'unit': unit, 'timestamp': time.time()})
+      
+    def get_average(self, name: str) -> float:
+        """Get average value for a metric."""
+        if name not in self.metrics:
+            return 0.0
+        values = [m['value'] for m in self.metrics[name]]
+        return sum(values) / len(values)
+      
+    def report(self) -> dict:
+        """Generate performance report."""
+        report = {}
+        for name, metrics in self.metrics.items():
+            values = [m['value'] for m in metrics]
+            report[name] = {
+                'count': len(values),
+                'average': sum(values) / len(values),
+                'min': min(values),
+                'max': max(values),
+                'unit': metrics[0]['unit'] if metrics else 'unknown'
+            }
+        return report
+```
+
+## Deployment Procedures
+
+### Production Configuration
+
+#### Environment Configuration
+
+```python
+"""
+Production configuration settings.
+"""
+
+import os
+from typing import Dict, Any
+
+
+class ProductionConfig:
+    """Production environment configuration."""
+  
+    # Security
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+  
+    # Database
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    DATABASE_POOL_SIZE = int(os.environ.get('DATABASE_POOL_SIZE', '10'))
+  
+    # External APIs
+    OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+    ALPHA_VANTAGE_API_KEY = os.environ.get('ALPHA_VANTAGE_API_KEY')
+  
+    # Cache
+    REDIS_URL = os.environ.get('REDIS_URL')
+    CACHE_TIMEOUT = int(os.environ.get('CACHE_TIMEOUT', '300'))
+  
+    # Application
+    DEBUG = False
+    TESTING = False
+    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+  
+    # Performance
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+    REQUEST_TIMEOUT = int(os.environ.get('REQUEST_TIMEOUT', '30'))
+  
+    @classmethod
+    def validate(cls) -> None:
+        """Validate required configuration."""
+        required_vars = [
+            'SECRET_KEY',
+            'JWT_SECRET_KEY',
+            'DATABASE_URL',
+            'OPENAI_API_KEY'
+        ]
+      
+        missing_vars = [var for var in required_vars if not os.environ.get(var)]
+        if missing_vars:
+            raise EnvironmentError(f"Missing required environment variables: {missing_vars}")
+```
+
+#### Docker Configuration
+
+```dockerfile
+# Production Dockerfile
+FROM python:3.9-slim as builder
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create application user
+RUN useradd --create-home --shell /bin/bash appuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt requirements-prod.txt ./
+RUN pip install --no-cache-dir -r requirements-prod.txt
+
+# Production stage
+FROM python:3.9-slim as production
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create application user
+RUN useradd --create-home --shell /bin/bash appuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy Python packages from builder
+COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy application code
+COPY --chown=appuser:appuser . .
+
+# Switch to application user
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:5000/api/v1/health || exit 1
+
+# Expose port
+EXPOSE 5000
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV FLASK_APP=web_server.py
+ENV FLASK_ENV=production
+
+# Start application
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "30", "web_server:app"]
+```
+
+## Submission Requirements
+
+### Pull Request Process
+
+1. **Pre-submission Checklist**:
+
+   - [ ] Code follows style guidelines
+   - [ ] Documentation updated
+   - [ ] No security vulnerabilities introduced
+2. **Branch Preparation**:
+
+   ```bash
+   # Ensure branch is up to date
+   git fetch upstream
+   git rebase upstream/main
+
+   # Run quality checks
+   python -m pytest
+   python -m flake8 src/
+   python -m black src/ --check
+   python -m mypy src/
+   ```
+3. **Pull Request Template**:
+
+```markdown
+## Summary
+
+Brief description of changes made and problem solved.
+
+## Type of Change
+
+- [ ] Bug fix (non-breaking change)
+- [ ] New feature (non-breaking change)
+- [ ] Breaking change (fix or feature causing existing functionality to change)
+- [ ] Documentation update
+- [ ] Performance improvement
+- [ ] Code refactoring
+
+## Changes Made
+
+- Detailed list of changes
+- Include any new dependencies
+- Note any configuration changes required
+
+## Testing
+
+- [ ] Unit tests added/updated
+- [ ] Integration tests added/updated
+- [ ] Manual testing completed
+- [ ] Performance impact assessed
+
+### Test Coverage
+
+Current coverage: ___%
+New/modified files coverage: ___%
+
+## Documentation
+
+- [ ] Code comments added/updated
+- [ ] API documentation updated
+- [ ] User documentation updated
+- [ ] README updated if necessary
+
+## Security Considerations
+
+- [ ] No sensitive data exposed
+- [ ] Input validation implemented
+- [ ] Authentication/authorization maintained
+- [ ] No new security vulnerabilities
+
+## Performance Impact
+
+- [ ] No significant performance degradation
+- [ ] Database queries optimized
+- [ ] Caching strategy considered
+- [ ] Memory usage acceptable
+
+## Deployment Notes
+
+Any special deployment considerations or migration steps required.
+
+## Screenshots
+
+Include screenshots for UI changes.
+
+## Related Issues
+
+Fixes #(issue number)
+Related to #(issue number)
+```
+
+### Code Review Guidelines
+
+#### For Authors
+
+1. **Self-Review**: Review your own code before submitting
+2. **Clear Description**: Provide comprehensive PR description
+3. **Small Changes**: Keep PRs focused and reasonably sized
+4. **Documentation**: Update relevant documentation
+5. **Tests**: Include appropriate test coverage
+
+#### For Reviewers
+
+1. **Functionality**: Verify code solves the stated problem
+2. **Code Quality**: Check adherence to style guidelines
+3. **Architecture**: Ensure changes align with project architecture
+4. **Security**: Review for potential security issues
+5. **Performance**: Consider performance implications
+6. **Testing**: Verify adequate test coverage
+
+### Release Process
+
+#### Version Management
+
+Follow Semantic Versioning (SemVer):
+
+- **MAJOR**: Breaking changes
+- **MINOR**: New features (backward compatible)
+- **PATCH**: Bug fixes (backward compatible)
+
+#### Release Checklist
+
+1. **Pre-release**:
+
+   - [ ] All tests pass
+   - [ ] Documentation updated
+   - [ ] Security scan completed
+   - [ ] Performance benchmarks acceptable
+2. **Release**:
+
+   - [ ] Version number updated
+   - [ ] Changelog updated
+   - [ ] Git tag created
+   - [ ] Docker images built and pushed
+3. **Post-release**:
+
+   - [ ] Deployment verified
+   - [ ] Monitoring alerts configured
+   - [ ] Documentation published
+
+This contributing guide ensures consistent, high-quality contributions to the Financial Research Assistant project. All contributors must adhere to these standards to maintain code quality, security, and performance standards.
