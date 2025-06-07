@@ -12,6 +12,7 @@ const Analysis = {
         console.log('Analysis module initialized');
         this.setupAnalysisEventListeners();
         this.setupIndicatorToggles();
+        this.setupAIAnalysisControls();
     },
 
     setupAnalysisEventListeners() {
@@ -132,6 +133,11 @@ const Analysis = {
 
             // Update comprehensive metrics
             this.updateAdvancedMetrics(symbol, historicalData, marketData);
+
+            // Trigger AI analysis automatically
+            setTimeout(() => {
+                this.refreshAIAnalysis();
+            }, 1000); // Small delay to let charts render first
 
             // Hide loading indicators after all rendering is complete
             this.hideLoading();
@@ -374,6 +380,337 @@ const Analysis = {
             rsiSignal: rsiSignal,
             volume: current.volume
         };
+    },
+
+    // AI Analysis Methods
+    setupAIAnalysisControls() {
+        // Refresh AI Analysis button
+        const refreshBtn = document.getElementById('refresh-ai-analysis');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.refreshAIAnalysis());
+        }
+
+        // Toggle AI Details button
+        const toggleBtn = document.getElementById('toggle-ai-details');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => this.toggleAIDetails());
+        }
+
+        // Retry AI Analysis button
+        const retryBtn = document.getElementById('retry-ai-analysis');
+        if (retryBtn) {
+            retryBtn.addEventListener('click', () => this.refreshAIAnalysis());
+        }
+    },
+
+    async refreshAIAnalysis() {
+        if (!this.currentSymbol || !this.currentData) {
+            console.warn('No symbol or data available for AI analysis');
+            return;
+        }
+
+        console.log('Refreshing AI analysis for', this.currentSymbol);
+        this.showAILoading();
+
+        try {
+            // Prepare data for AI analysis
+            const analysisData = this.prepareAIAnalysisData();
+            
+            // Get AI analysis
+            const aiAnalysis = await this.getAIAnalysis(analysisData);
+            
+            // Display results
+            this.displayAIAnalysis(aiAnalysis);
+            
+        } catch (error) {
+            console.error('AI Analysis error:', error);
+            this.showAIError(error.message);
+        }
+    },
+
+    prepareAIAnalysisData() {
+        if (!this.currentData || !this.currentData.data) {
+            throw new Error('No data available for analysis');
+        }
+
+        const data = this.currentData.data;
+        const latest = data[data.length - 1];
+        const previous = data[data.length - 2];
+
+        // Calculate technical indicators
+        const prices = data.map(d => d.close);
+        const volumes = data.map(d => d.volume);
+        
+        // Calculate RSI
+        const rsi = Utils.calculateRSI(prices);
+        
+        // Calculate MACD
+        const macdResult = Utils.calculateMACD(prices);
+        
+        // Calculate Bollinger Bands
+        const bb = Utils.calculateBollingerBands(prices);
+        
+        // Calculate Moving Averages
+        const sma20 = Utils.calculateSMA(prices, 20);
+        const sma50 = Utils.calculateSMA(prices, 50);
+        
+        // Calculate support and resistance
+        const supportResistance = this.calculateSupportResistance(prices);
+
+        // Prepare stock data
+        const stockData = {
+            symbol: this.currentSymbol,
+            current_price: latest.close,
+            price_change: latest.close - previous.close,
+            price_change_percent: ((latest.close - previous.close) / previous.close) * 100,
+            volume: latest.volume,
+            market_cap: this.estimateMarketCap(latest.close),
+            day_range: {
+                low: Math.min(...data.slice(-1).map(d => d.low)),
+                high: Math.max(...data.slice(-1).map(d => d.high))
+            },
+            week_52_range: {
+                low: Math.min(...prices.slice(-252)),
+                high: Math.max(...prices.slice(-252))
+            }
+        };
+
+        // Prepare technical indicators
+        const technicalIndicators = {
+            rsi: rsi[rsi.length - 1] || 50,
+            macd: {
+                macd: (macdResult.macdLine && macdResult.macdLine.length > 0) ? 
+                      macdResult.macdLine.filter(x => x !== undefined).slice(-1)[0] || 0 : 0,
+                signal: (macdResult.signalLine && macdResult.signalLine.length > 0) ? 
+                        macdResult.signalLine.filter(x => x !== undefined).slice(-1)[0] || 0 : 0,
+                histogram: (macdResult.histogram && macdResult.histogram.length > 0) ? 
+                           macdResult.histogram.filter(x => x !== undefined).slice(-1)[0] || 0 : 0
+            },
+            bollinger_bands: {
+                upper: (bb.upper && bb.upper.length > 0) ? bb.upper[bb.upper.length - 1] : latest.close * 1.02,
+                lower: (bb.lower && bb.lower.length > 0) ? bb.lower[bb.lower.length - 1] : latest.close * 0.98,
+                middle: (bb.middle && bb.middle.length > 0) ? bb.middle[bb.middle.length - 1] : latest.close
+            },
+            moving_averages: {
+                sma20: (sma20 && sma20.length > 0) ? sma20[sma20.length - 1] : latest.close,
+                sma50: (sma50 && sma50.length > 0) ? sma50[sma50.length - 1] : latest.close
+            },
+            volume_analysis: {
+                current_volume: latest.volume,
+                avg_volume: volumes.slice(-20).reduce((a, b) => a + b, 0) / 20,
+                volume_trend: latest.volume > (volumes.slice(-5).reduce((a, b) => a + b, 0) / 5) ? 'increasing' : 'decreasing'
+            },
+            support_resistance: supportResistance
+        };
+
+        return {
+            stock_data: stockData,
+            technical_indicators: technicalIndicators,
+            time_period: this.selectedTimeRange || '3M'
+        };
+    },
+
+    async getAIAnalysis(analysisData) {
+        try {
+            // Try to call backend AI analysis endpoint
+            const response = await fetch('/api/ai-analysis', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(analysisData)
+            });
+
+            if (response.ok) {
+                return await response.json();
+            } else {
+                throw new Error('AI service unavailable');
+            }
+        } catch (error) {
+            console.warn('Backend AI analysis failed, using fallback:', error);
+            return this.getFallbackAnalysis(analysisData);
+        }
+    },
+
+    getFallbackAnalysis(data) {
+        const { stock_data, technical_indicators } = data;
+        
+        // Determine sentiment
+        let sentiment = 'neutral';
+        if (technical_indicators.rsi > 70) {
+            sentiment = 'bearish';
+        } else if (technical_indicators.rsi < 30) {
+            sentiment = 'bullish';
+        } else if (stock_data.price_change_percent > 2) {
+            sentiment = 'bullish';
+        } else if (stock_data.price_change_percent < -2) {
+            sentiment = 'bearish';
+        }
+
+        return {
+            overall_sentiment: sentiment,
+            price_analysis: `${stock_data.symbol} is trading at $${stock_data.current_price.toFixed(2)}, showing a ${stock_data.price_change_percent > 0 ? 'gain' : 'loss'} of ${Math.abs(stock_data.price_change_percent).toFixed(2)}% from the previous session. The stock is currently ${stock_data.current_price > technical_indicators.moving_averages.sma20 ? 'above' : 'below'} its 20-day moving average.`,
+            technical_summary: `RSI at ${technical_indicators.rsi.toFixed(1)} indicates ${technical_indicators.rsi > 70 ? 'overbought' : technical_indicators.rsi < 30 ? 'oversold' : 'neutral'} conditions. MACD shows ${technical_indicators.macd.macd > technical_indicators.macd.signal ? 'bullish' : 'bearish'} momentum with the MACD line ${technical_indicators.macd.macd > technical_indicators.macd.signal ? 'above' : 'below'} the signal line.`,
+            volume_insights: `Current volume of ${stock_data.volume.toLocaleString()} shares is ${technical_indicators.volume_analysis.volume_trend} compared to recent averages, suggesting ${technical_indicators.volume_analysis.volume_trend === 'increasing' ? 'heightened' : 'normal'} market interest.`,
+            support_resistance: `Key support identified around $${technical_indicators.support_resistance.support.toFixed(2)} with resistance near $${technical_indicators.support_resistance.resistance.toFixed(2)}. These levels represent important psychological and technical barriers.`,
+            risk_assessment: `Current market conditions present ${sentiment === 'bullish' ? 'moderate upside potential' : sentiment === 'bearish' ? 'downside risks' : 'mixed signals'}. Monitor key technical levels and volume for confirmation of trend direction.`,
+            short_term_outlook: `Short-term outlook appears ${sentiment} based on current technical indicators. Watch for ${technical_indicators.rsi > 70 ? 'potential pullback from overbought levels' : technical_indicators.rsi < 30 ? 'potential bounce from oversold conditions' : 'breakout from current consolidation'}.`,
+            key_levels: `Important levels to watch: Support at $${technical_indicators.support_resistance.support.toFixed(2)}, Resistance at $${technical_indicators.support_resistance.resistance.toFixed(2)}, 20-day MA at $${technical_indicators.moving_averages.sma20.toFixed(2)}`,
+            trading_suggestion: `Based on current analysis, consider ${sentiment === 'bullish' ? 'potential long positions with stop-loss below support' : sentiment === 'bearish' ? 'caution and potential short positions with stop-loss above resistance' : 'waiting for clearer directional signals'}. Always use proper risk management and position sizing.`
+        };
+    },
+
+    displayAIAnalysis(analysis) {
+        // Hide loading and error states
+        this.hideAILoading();
+        this.hideAIError();
+
+        // Show results
+        const resultsDiv = document.getElementById('ai-analysis-results');
+        if (resultsDiv) {
+            resultsDiv.style.display = 'block';
+        }
+
+        // Update sentiment badge
+        this.updateSentimentBadge(analysis.overall_sentiment);
+
+        // Update insight cards
+        this.updateInsightCard('ai-price-analysis', analysis.price_analysis);
+        this.updateInsightCard('ai-technical-summary', analysis.technical_summary);
+        this.updateInsightCard('ai-volume-insights', analysis.volume_insights);
+        this.updateInsightCard('ai-risk-assessment', analysis.risk_assessment);
+
+        // Update detailed sections
+        this.updateInsightCard('ai-support-resistance', analysis.support_resistance);
+        this.updateInsightCard('ai-short-term-outlook', analysis.short_term_outlook);
+        this.updateInsightCard('ai-key-levels', analysis.key_levels);
+        this.updateInsightCard('ai-trading-suggestion', analysis.trading_suggestion);
+
+        console.log('AI Analysis displayed successfully');
+    },
+
+    updateSentimentBadge(sentiment) {
+        const badge = document.getElementById('sentiment-badge');
+        if (badge) {
+            // Remove existing classes
+            badge.classList.remove('bullish', 'bearish', 'neutral');
+            
+            // Add appropriate class and text
+            if (sentiment.toLowerCase().includes('bullish')) {
+                badge.classList.add('bullish');
+                badge.textContent = 'Bullish';
+            } else if (sentiment.toLowerCase().includes('bearish')) {
+                badge.classList.add('bearish');
+                badge.textContent = 'Bearish';
+            } else {
+                badge.classList.add('neutral');
+                badge.textContent = 'Neutral';
+            }
+        }
+    },
+
+    updateInsightCard(elementId, content) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.textContent = content;
+        }
+    },
+
+    toggleAIDetails() {
+        const detailsDiv = document.getElementById('ai-detailed-analysis');
+        const toggleBtn = document.getElementById('toggle-ai-details');
+        
+        if (detailsDiv && toggleBtn) {
+            const isVisible = detailsDiv.style.display !== 'none';
+            
+            if (isVisible) {
+                detailsDiv.style.display = 'none';
+                toggleBtn.innerHTML = '<i class="fas fa-expand"></i> Show Details';
+            } else {
+                detailsDiv.style.display = 'block';
+                toggleBtn.innerHTML = '<i class="fas fa-compress"></i> Hide Details';
+            }
+        }
+    },
+
+    showAILoading() {
+        const loadingDiv = document.getElementById('ai-analysis-loading');
+        const resultsDiv = document.getElementById('ai-analysis-results');
+        const errorDiv = document.getElementById('ai-analysis-error');
+        
+        if (loadingDiv) loadingDiv.style.display = 'block';
+        if (resultsDiv) resultsDiv.style.display = 'none';
+        if (errorDiv) errorDiv.style.display = 'none';
+    },
+
+    hideAILoading() {
+        const loadingDiv = document.getElementById('ai-analysis-loading');
+        if (loadingDiv) loadingDiv.style.display = 'none';
+    },
+
+    showAIError(message) {
+        const errorDiv = document.getElementById('ai-analysis-error');
+        const loadingDiv = document.getElementById('ai-analysis-loading');
+        const resultsDiv = document.getElementById('ai-analysis-results');
+        
+        if (errorDiv) {
+            errorDiv.style.display = 'block';
+            const errorText = errorDiv.querySelector('p');
+            if (errorText) {
+                errorText.textContent = message || 'AI analysis is currently unavailable. Please try again later.';
+            }
+        }
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (resultsDiv) resultsDiv.style.display = 'none';
+    },
+
+    hideAIError() {
+        const errorDiv = document.getElementById('ai-analysis-error');
+        if (errorDiv) errorDiv.style.display = 'none';
+    },
+
+    // Technical Analysis Helper Methods
+    calculateSupportResistance(prices) {
+        if (prices.length < 20) {
+            const current = prices[prices.length - 1];
+            return {
+                support: current * 0.95,
+                resistance: current * 1.05
+            };
+        }
+        
+        // Simple support/resistance calculation
+        const recentPrices = prices.slice(-50);
+        const highs = [];
+        const lows = [];
+        
+        // Find local highs and lows
+        for (let i = 2; i < recentPrices.length - 2; i++) {
+            if (recentPrices[i] > recentPrices[i-1] && recentPrices[i] > recentPrices[i+1] &&
+                recentPrices[i] > recentPrices[i-2] && recentPrices[i] > recentPrices[i+2]) {
+                highs.push(recentPrices[i]);
+            }
+            if (recentPrices[i] < recentPrices[i-1] && recentPrices[i] < recentPrices[i+1] &&
+                recentPrices[i] < recentPrices[i-2] && recentPrices[i] < recentPrices[i+2]) {
+                lows.push(recentPrices[i]);
+            }
+        }
+        
+        const resistance = highs.length ? Math.max(...highs) : Math.max(...recentPrices);
+        const support = lows.length ? Math.min(...lows) : Math.min(...recentPrices);
+        
+        return { support, resistance };
+    },
+
+    estimateMarketCap(price) {
+        // This is a rough estimation - in reality you'd need shares outstanding
+        const estimatedShares = 1000000000; // 1B shares as rough estimate
+        const marketCap = price * estimatedShares;
+        
+        if (marketCap > 1e12) return `$${(marketCap / 1e12).toFixed(1)}T`;
+        if (marketCap > 1e9) return `$${(marketCap / 1e9).toFixed(1)}B`;
+        if (marketCap > 1e6) return `$${(marketCap / 1e6).toFixed(1)}M`;
+        return `$${marketCap.toFixed(0)}`;
     }
 };
 

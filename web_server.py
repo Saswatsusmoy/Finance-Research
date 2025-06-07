@@ -19,6 +19,18 @@ sys.path.append('src')
 from agents.market_data_agent import MarketDataAgent
 from agents.insider_trading_agent import InsiderTradingAgent
 
+# Try to import AI analysis agent
+try:
+    from agents.ai_analysis_agent import AIAnalysisAgent, StockData, TechnicalIndicators
+    ai_analysis_agent = AIAnalysisAgent()
+    AI_ANALYSIS_AVAILABLE = True
+except ImportError as e:
+    print(f"AI analysis agent not available: {e}")
+    ai_analysis_agent = None
+    StockData = None
+    TechnicalIndicators = None
+    AI_ANALYSIS_AVAILABLE = False
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -1012,13 +1024,113 @@ def get_technical_indicators(symbol):
         logger.error(f"Error fetching technical indicators for {symbol}: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/ai-analysis', methods=['POST'])
+def get_ai_analysis():
+    """Get AI-powered analysis of stock data and technical indicators"""
+    try:
+        if not AI_ANALYSIS_AVAILABLE:
+            return jsonify({
+                'error': 'AI analysis service is not available',
+                'fallback': True
+            }), 503
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Extract data from request
+        stock_data_dict = data.get('stock_data', {})
+        technical_indicators_dict = data.get('technical_indicators', {})
+        time_period = data.get('time_period', '3M')
+        
+        # Create data objects
+        stock_data = StockData(
+            symbol=stock_data_dict.get('symbol', ''),
+            current_price=stock_data_dict.get('current_price', 0),
+            price_change=stock_data_dict.get('price_change', 0),
+            price_change_percent=stock_data_dict.get('price_change_percent', 0),
+            volume=stock_data_dict.get('volume', 0),
+            market_cap=stock_data_dict.get('market_cap'),
+            day_range=stock_data_dict.get('day_range', {'low': 0, 'high': 0}),
+            week_52_range=stock_data_dict.get('week_52_range', {'low': 0, 'high': 0})
+        )
+        
+        technical_indicators = TechnicalIndicators(
+            rsi=technical_indicators_dict.get('rsi', 50),
+            macd=technical_indicators_dict.get('macd', {'macd': 0, 'signal': 0, 'histogram': 0}),
+            bollinger_bands=technical_indicators_dict.get('bollinger_bands', {'upper': 0, 'lower': 0, 'middle': 0}),
+            moving_averages=technical_indicators_dict.get('moving_averages', {'sma20': 0, 'sma50': 0}),
+            volume_analysis=technical_indicators_dict.get('volume_analysis', {}),
+            support_resistance=technical_indicators_dict.get('support_resistance', {'support': 0, 'resistance': 0})
+        )
+        
+        # Run AI analysis
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        try:
+            analysis_result = loop.run_until_complete(
+                ai_analysis_agent.analyze_stock_comprehensive(
+                    stock_data, 
+                    technical_indicators, 
+                    time_period
+                )
+            )
+            
+            return jsonify(analysis_result)
+            
+        finally:
+            loop.close()
+            
+    except Exception as e:
+        logger.error(f"Error in AI analysis: {str(e)}")
+        
+        # Return fallback analysis
+        try:
+            data = request.get_json() or {}
+            stock_data_dict = data.get('stock_data', {})
+            technical_indicators_dict = data.get('technical_indicators', {})
+            
+            # Simple fallback analysis
+            sentiment = 'neutral'
+            rsi = technical_indicators_dict.get('rsi', 50)
+            price_change_percent = stock_data_dict.get('price_change_percent', 0)
+            
+            if rsi > 70:
+                sentiment = 'bearish'
+            elif rsi < 30:
+                sentiment = 'bullish'
+            elif price_change_percent > 2:
+                sentiment = 'bullish'
+            elif price_change_percent < -2:
+                sentiment = 'bearish'
+            
+            fallback_analysis = {
+                'overall_sentiment': sentiment,
+                'price_analysis': f"Stock is trading at ${stock_data_dict.get('current_price', 0):.2f} with a {abs(price_change_percent):.2f}% {'gain' if price_change_percent > 0 else 'loss'}.",
+                'technical_summary': f"RSI at {rsi:.1f} indicates {'overbought' if rsi > 70 else 'oversold' if rsi < 30 else 'neutral'} conditions.",
+                'volume_insights': f"Current volume suggests {'heightened' if technical_indicators_dict.get('volume_analysis', {}).get('volume_trend') == 'increasing' else 'normal'} market activity.",
+                'support_resistance': f"Key levels identified from recent price action.",
+                'risk_assessment': f"Monitor technical indicators for trend confirmation.",
+                'short_term_outlook': f"Watch for {sentiment} signals in the near term.",
+                'key_levels': f"Important support and resistance levels to monitor.",
+                'trading_suggestion': f"Educational analysis only - consult financial advisor for investment decisions."
+            }
+            
+            return jsonify(fallback_analysis)
+            
+        except Exception as fallback_error:
+            logger.error(f"Error in fallback analysis: {str(fallback_error)}")
+            return jsonify({'error': 'Analysis service temporarily unavailable'}), 500
+
 @app.route('/api/health')
 def health_check():
     """Health check endpoint"""
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now().isoformat(),
-        'cache_size': len(data_cache)
+        'cache_size': len(data_cache),
+        'ai_analysis_available': AI_ANALYSIS_AVAILABLE
     })
 
 @app.errorhandler(404)

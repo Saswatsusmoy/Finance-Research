@@ -4399,4 +4399,292 @@ body {
     }
 }
 
-// ... existing code ... 
+/* AI Analysis Section */
+.ai-analysis-section {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(15px);
+    margin-top: var(--space-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-analysis-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #8b5cf6 0%, #ec4899 33%, #06b6d4 66%, #10b981 100%);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.ai-analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.ai-analysis-header h3 {
+    color: var(--text-primary);
+    font-size: 1.4rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin: 0;
+}
+
+.ai-analysis-header h3 i {
+    color: #8b5cf6;
+    font-size: 1.2rem;
+}
+
+.ai-analysis-controls {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.ai-analysis-controls .btn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: var(--radius-sm);
+    transition: all 0.3s ease;
+}
+
+.ai-analysis-loading {
+    text-align: center;
+    padding: var(--space-xl);
+    color: var(--text-secondary);
+}
+
+.ai-analysis-loading .loading-spinner {
+    margin-bottom: var(--space-md);
+}
+
+.ai-analysis-loading .spinner-ring {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(139, 92, 246, 0.3);
+    border-top: 3px solid #8b5cf6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+.ai-analysis-results {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.sentiment-card {
+    margin-bottom: var(--space-lg);
+    text-align: center;
+}
+
+.sentiment-indicator {
+    margin-top: var(--space-sm);
+}
+
+.sentiment-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.sentiment-badge.bullish {
+    background: linear-gradient(135deg, var(--accent-success) 0%, rgba(5, 150, 105, 0.8) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.sentiment-badge.bearish {
+    background: linear-gradient(135deg, var(--accent-danger) 0%, rgba(220, 38, 38, 0.8) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.sentiment-badge.neutral {
+    background: linear-gradient(135deg, rgba(148, 163, 184, 0.8) 0%, rgba(100, 116, 139, 0.8) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(148, 163, 184, 0.3);
+}
+
+.ai-insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-lg);
+    margin-bottom: var(--space-lg);
+}
+
+.ai-insight-card {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-insight-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #8b5cf6 0%, #ec4899 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.ai-insight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+.ai-insight-card:hover::before {
+    opacity: 1;
+}
+
+.insight-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.insight-header i {
+    color: #8b5cf6;
+    font-size: 1.1rem;
+}
+
+.insight-header h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.insight-content {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 0.9rem;
+}
+
+.ai-detailed-analysis {
+    border-top: 1px solid rgba(148, 163, 184, 0.1);
+    padding-top: var(--space-lg);
+    margin-top: var(--space-lg);
+}
+
+.detailed-section {
+    margin-bottom: var(--space-lg);
+    padding: var(--space-md);
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid #8b5cf6;
+}
+
+.detailed-section h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 var(--space-sm) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.detailed-section h4 i {
+    color: #8b5cf6;
+}
+
+.trading-suggestion {
+    border-left-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.trading-suggestion h4 i {
+    color: #f59e0b;
+}
+
+.disclaimer {
+    margin-top: var(--space-md);
+    padding: var(--space-sm);
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: var(--radius-xs);
+    border-left: 3px solid #f59e0b;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.disclaimer i {
+    color: #f59e0b;
+    font-size: 0.9rem;
+}
+
+.ai-analysis-error {
+    text-align: center;
+    padding: var(--space-xl);
+}
+
+.error-content {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.error-content i {
+    font-size: 3rem;
+    color: var(--accent-danger);
+    margin-bottom: var(--space-md);
+}
+
+.error-content h4 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+}
+
+.error-content p {
+    color: var(--text-secondary);
+    margin-bottom: var(--space-lg);
+    line-height: 1.6;
+}
+
+/* AI Analysis Responsive Design */
+@media (max-width: 768px) {
+    .ai-analysis-header {
+        flex-direction: column;
+        gap: var(--space-md);
+        align-items: stretch;
+    }
+    
+    .ai-analysis-controls {
+        justify-content: center;
+    }
+    
+    .ai-insights-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+    }
+    
+    .ai-insight-card {
+        padding: var(--space-md);
+    }
+}
