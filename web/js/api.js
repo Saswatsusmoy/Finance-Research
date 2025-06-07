@@ -71,9 +71,9 @@ class FinancialDataAPI {
     }
     
     // Market Data Methods
-    async getMarketData(symbol) {
+    async getMarketData(symbol, market = 'US') {
         try {
-            return await this.makeRequest(`/market/${symbol}`);
+            return await this.makeRequest(`/market/${symbol}?market=${market}`);
         } catch (error) {
             // Fallback to mock data if API fails
             console.warn(`API failed for ${symbol}, using mock data`);
@@ -81,20 +81,20 @@ class FinancialDataAPI {
         }
     }
     
-    async getBatchMarketData(symbols) {
+    async getBatchMarketData(symbols, market = 'US') {
         try {
             const symbolsParam = symbols.join(',');
-            return await this.makeRequest(`/market/batch?symbols=${symbolsParam}`);
+            return await this.makeRequest(`/market/batch?symbols=${symbolsParam}&market=${market}`);
         } catch (error) {
             // Fallback to individual requests
-            const promises = symbols.map(symbol => this.getMarketData(symbol));
+            const promises = symbols.map(symbol => this.getMarketData(symbol, market));
             return await Promise.all(promises);
         }
     }
     
-    async getHistoricalData(symbol, period = '1M', interval = '1d') {
+    async getHistoricalData(symbol, market = 'US', period = '1M', interval = '1d') {
         try {
-            return await this.makeRequest(`/historical/${symbol}?period=${period}&interval=${interval}`);
+            return await this.makeRequest(`/historical/${symbol}?period=${period}&interval=${interval}&market=${market}`);
         } catch (error) {
             console.warn(`Historical data API failed for ${symbol}, using mock data`);
             return this.generateMockHistoricalData(symbol, period);

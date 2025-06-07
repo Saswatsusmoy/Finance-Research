@@ -294,12 +294,30 @@
         <div id="analysis-page" class="page">
             <div class="page-header">
                 <h1 class="page-title">Technical Analysis</h1>
-                <div class="symbol-search">
-                    <input type="text" id="analysis-symbol" placeholder="Enter symbol (e.g., AAPL)" class="symbol-input">
-                    <button class="btn btn-primary" id="analyze-symbol">
-                        <i class="fas fa-search"></i>
-                        Analyze
-                    </button>
+                <div class="analysis-controls">
+                    <div class="market-selector">
+                        <label for="market-select">Market:</label>
+                        <select id="market-select" class="market-select">
+                            <option value="US" selected>🇺🇸 US Market</option>
+                            <option value="IN">🇮🇳 Indian Market</option>
+                        </select>
+                    </div>
+                    
+                    <div class="market-status-indicator" id="market-status">
+                        <div class="market-status-dot" id="market-status-dot"></div>
+                        <span class="market-status-text" id="market-status-text">Market Open</span>
+                    </div>
+                    
+                    <div class="symbol-search">
+                        <div class="symbol-input-container">
+                            <input type="text" id="analysis-symbol" placeholder="Enter US stock (e.g., AAPL, MSFT, GOOGL)" class="symbol-input">
+                            <div class="symbol-suggestions" id="symbol-suggestions"></div>
+                        </div>
+                        <button class="btn btn-primary" id="analyze-symbol">
+                            <i class="fas fa-search"></i>
+                            Analyze
+                        </button>
+                    </div>
                 </div>
             </div>
 

@@ -7,12 +7,15 @@ const Analysis = {
     currentSymbol: null,
     currentData: null,
     indicators: new Set(['ma', 'rsi']), // Default indicators
+    selectedMarket: 'US',
+    currentCurrency: 'USD',
 
     init() {
         console.log('Analysis module initialized');
         this.setupAnalysisEventListeners();
         this.setupIndicatorToggles();
         this.setupAIAnalysisControls();
+        this.setupMarketSelector();
     },
 
     setupAnalysisEventListeners() {
@@ -91,7 +94,10 @@ const Analysis = {
 
         const symbol = symbolInput.value.trim().toUpperCase();
         if (!this.validateSymbol(symbol)) {
-            this.showError('Please enter a valid stock symbol (1-5 letters)');
+            const errorMsg = this.selectedMarket === 'IN' 
+                ? 'Please enter a valid Indian stock symbol (e.g., RELIANCE, TCS, HDFCBANK)'
+                : 'Please enter a valid US stock symbol (1-5 letters, e.g., AAPL, MSFT)';
+            this.showError(errorMsg);
             return;
         }
 
@@ -154,7 +160,7 @@ const Analysis = {
     async fetchMarketData(symbol) {
         try {
             if (window.API && window.API.getMarketData) {
-                return await window.API.getMarketData(symbol);
+                return await window.API.getMarketData(symbol, this.selectedMarket);
             }
             return null;
         } catch (error) {
@@ -167,8 +173,8 @@ const Analysis = {
         try {
             console.log('API check:', !!window.API);
             if (window.API && window.API.getHistoricalData) {
-                console.log('Calling API.getHistoricalData for', symbol);
-                const data = await window.API.getHistoricalData(symbol);
+                console.log('Calling API.getHistoricalData for', symbol, 'market:', this.selectedMarket);
+                const data = await window.API.getHistoricalData(symbol, this.selectedMarket);
                 console.log('API returned data:', data);
                 return data;
             }
@@ -339,7 +345,21 @@ const Analysis = {
     },
 
     validateSymbol(symbol) {
-        return symbol && symbol.length > 0 && /^[A-Z]{1,5}$/.test(symbol);
+        if (!symbol || symbol.length === 0) {
+            return false;
+        }
+        
+        // Convert to uppercase for validation
+        const upperSymbol = symbol.toUpperCase();
+        
+        // Market-aware validation
+        if (this.selectedMarket === 'IN') {
+            // Indian stocks: Allow 1-12 characters, letters and hyphens (for symbols like BAJAJ-AUTO)
+            return /^[A-Z][A-Z0-9&-]{0,11}$/.test(upperSymbol);
+        } else {
+            // US stocks: Traditional 1-5 letter symbols
+            return /^[A-Z]{1,5}$/.test(upperSymbol);
+        }
     },
 
     // Get analysis summary for current symbol
@@ -460,6 +480,8 @@ const Analysis = {
         // Prepare stock data
         const stockData = {
             symbol: this.currentSymbol,
+            market: this.selectedMarket,
+            currency: this.currentCurrency,
             current_price: latest.close,
             price_change: latest.close - previous.close,
             price_change_percent: ((latest.close - previous.close) / previous.close) * 100,
@@ -534,6 +556,8 @@ const Analysis = {
 
     getFallbackAnalysis(data) {
         const { stock_data, technical_indicators } = data;
+        const currencySymbol = stock_data.currency === 'INR' ? '₹' : '$';
+        const marketContext = stock_data.market === 'IN' ? 'Indian market' : 'US market';
         
         // Determine sentiment
         let sentiment = 'neutral';
@@ -549,13 +573,13 @@ const Analysis = {
 
         return {
             overall_sentiment: sentiment,
-            price_analysis: `${stock_data.symbol} is trading at $${stock_data.current_price.toFixed(2)}, showing a ${stock_data.price_change_percent > 0 ? 'gain' : 'loss'} of ${Math.abs(stock_data.price_change_percent).toFixed(2)}% from the previous session. The stock is currently ${stock_data.current_price > technical_indicators.moving_averages.sma20 ? 'above' : 'below'} its 20-day moving average.`,
+            price_analysis: `${stock_data.symbol} is trading at ${currencySymbol}${stock_data.current_price.toFixed(2)} in the ${marketContext}, showing a ${stock_data.price_change_percent > 0 ? 'gain' : 'loss'} of ${Math.abs(stock_data.price_change_percent).toFixed(2)}% from the previous session. The stock is currently ${stock_data.current_price > technical_indicators.moving_averages.sma20 ? 'above' : 'below'} its 20-day moving average.`,
             technical_summary: `RSI at ${technical_indicators.rsi.toFixed(1)} indicates ${technical_indicators.rsi > 70 ? 'overbought' : technical_indicators.rsi < 30 ? 'oversold' : 'neutral'} conditions. MACD shows ${technical_indicators.macd.macd > technical_indicators.macd.signal ? 'bullish' : 'bearish'} momentum with the MACD line ${technical_indicators.macd.macd > technical_indicators.macd.signal ? 'above' : 'below'} the signal line.`,
-            volume_insights: `Current volume of ${stock_data.volume.toLocaleString()} shares is ${technical_indicators.volume_analysis.volume_trend} compared to recent averages, suggesting ${technical_indicators.volume_analysis.volume_trend === 'increasing' ? 'heightened' : 'normal'} market interest.`,
-            support_resistance: `Key support identified around $${technical_indicators.support_resistance.support.toFixed(2)} with resistance near $${technical_indicators.support_resistance.resistance.toFixed(2)}. These levels represent important psychological and technical barriers.`,
-            risk_assessment: `Current market conditions present ${sentiment === 'bullish' ? 'moderate upside potential' : sentiment === 'bearish' ? 'downside risks' : 'mixed signals'}. Monitor key technical levels and volume for confirmation of trend direction.`,
+            volume_insights: `Current volume of ${stock_data.volume.toLocaleString()} shares is ${technical_indicators.volume_analysis.volume_trend} compared to recent averages, suggesting ${technical_indicators.volume_analysis.volume_trend === 'increasing' ? 'heightened' : 'normal'} market interest in the ${marketContext}.`,
+            support_resistance: `Key support identified around ${currencySymbol}${technical_indicators.support_resistance.support.toFixed(2)} with resistance near ${currencySymbol}${technical_indicators.support_resistance.resistance.toFixed(2)}. These levels represent important psychological and technical barriers.`,
+            risk_assessment: `Current ${marketContext} conditions present ${sentiment === 'bullish' ? 'moderate upside potential' : sentiment === 'bearish' ? 'downside risks' : 'mixed signals'}. Monitor key technical levels and volume for confirmation of trend direction.`,
             short_term_outlook: `Short-term outlook appears ${sentiment} based on current technical indicators. Watch for ${technical_indicators.rsi > 70 ? 'potential pullback from overbought levels' : technical_indicators.rsi < 30 ? 'potential bounce from oversold conditions' : 'breakout from current consolidation'}.`,
-            key_levels: `Important levels to watch: Support at $${technical_indicators.support_resistance.support.toFixed(2)}, Resistance at $${technical_indicators.support_resistance.resistance.toFixed(2)}, 20-day MA at $${technical_indicators.moving_averages.sma20.toFixed(2)}`,
+            key_levels: `Important levels to watch: Support at ${currencySymbol}${technical_indicators.support_resistance.support.toFixed(2)}, Resistance at ${currencySymbol}${technical_indicators.support_resistance.resistance.toFixed(2)}, 20-day MA at ${currencySymbol}${technical_indicators.moving_averages.sma20.toFixed(2)}`,
             trading_suggestion: `Based on current analysis, consider ${sentiment === 'bullish' ? 'potential long positions with stop-loss below support' : sentiment === 'bearish' ? 'caution and potential short positions with stop-loss above resistance' : 'waiting for clearer directional signals'}. Always use proper risk management and position sizing.`
         };
     },
@@ -707,10 +731,350 @@ const Analysis = {
         const estimatedShares = 1000000000; // 1B shares as rough estimate
         const marketCap = price * estimatedShares;
         
-        if (marketCap > 1e12) return `$${(marketCap / 1e12).toFixed(1)}T`;
-        if (marketCap > 1e9) return `$${(marketCap / 1e9).toFixed(1)}B`;
-        if (marketCap > 1e6) return `$${(marketCap / 1e6).toFixed(1)}M`;
-        return `$${marketCap.toFixed(0)}`;
+        if (this.currentCurrency === 'INR') {
+            if (marketCap > 1e12) return `₹${(marketCap / 1e12).toFixed(1)}T`;
+            if (marketCap > 1e9) return `₹${(marketCap / 1e9).toFixed(1)}B`;
+            if (marketCap > 1e6) return `₹${(marketCap / 1e6).toFixed(1)}M`;
+            return `₹${marketCap.toFixed(0)}`;
+        } else {
+            if (marketCap > 1e12) return `$${(marketCap / 1e12).toFixed(1)}T`;
+            if (marketCap > 1e9) return `$${(marketCap / 1e9).toFixed(1)}B`;
+            if (marketCap > 1e6) return `$${(marketCap / 1e6).toFixed(1)}M`;
+            return `$${marketCap.toFixed(0)}`;
+        }
+    },
+
+    setupMarketSelector() {
+        const marketSelect = document.getElementById('market-select');
+        const symbolInput = document.getElementById('analysis-symbol');
+        
+        if (marketSelect) {
+            marketSelect.addEventListener('change', (e) => {
+                this.selectedMarket = e.target.value;
+                this.currentCurrency = e.target.value === 'IN' ? 'INR' : 'USD';
+                
+                // Update UI theme
+                this.updateMarketTheme();
+                
+                // Update symbol input placeholder
+                if (symbolInput) {
+                    if (this.selectedMarket === 'IN') {
+                        symbolInput.placeholder = 'Enter Indian stock (e.g., RELIANCE, TCS, HDFCBANK)';
+                    } else {
+                        symbolInput.placeholder = 'Enter US stock (e.g., AAPL, MSFT, GOOGL)';
+                    }
+                }
+                
+                // Update default currency displays
+                this.updateDefaultCurrencyDisplays();
+                
+                // Clear current analysis when switching markets
+                if (this.currentSymbol) {
+                    this.clearAnalysis();
+                }
+                
+                // Update market status
+                this.updateMarketStatus();
+                
+                console.log(`Market changed to: ${this.selectedMarket}`);
+            });
+        }
+        
+        // Setup symbol suggestions
+        this.setupSymbolSuggestions();
+        
+        // Setup market status
+        this.updateMarketStatus();
+        
+        // Initialize default currency displays
+        this.updateDefaultCurrencyDisplays();
+    },
+
+    updateMarketTheme() {
+        const body = document.body;
+        
+        if (this.selectedMarket === 'IN') {
+            body.classList.add('indian-market');
+        } else {
+            body.classList.remove('indian-market');
+        }
+    },
+
+    updateDefaultCurrencyDisplays() {
+        const currencySymbol = this.currentCurrency === 'INR' ? '₹' : '$';
+        
+        // Update default price display
+        const currentPriceEl = document.getElementById('current-price');
+        if (currentPriceEl && currentPriceEl.textContent.includes('--')) {
+            currentPriceEl.textContent = `${currencySymbol}--`;
+        }
+        
+        // Update default range displays
+        const dayRangeEl = document.getElementById('day-range');
+        if (dayRangeEl && dayRangeEl.textContent.includes('$')) {
+            dayRangeEl.textContent = `${currencySymbol}-- - ${currencySymbol}--`;
+        }
+        
+        const weekRangeEl = document.getElementById('week-range');
+        if (weekRangeEl && weekRangeEl.textContent.includes('$')) {
+            weekRangeEl.textContent = `${currencySymbol}-- - ${currencySymbol}--`;
+        }
+    },
+
+    setupSymbolSuggestions() {
+        const symbolInput = document.getElementById('analysis-symbol');
+        const suggestionsDiv = document.getElementById('symbol-suggestions');
+        
+        if (!symbolInput || !suggestionsDiv) return;
+        
+        let suggestionTimeout;
+        
+        symbolInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim().toUpperCase();
+            
+            clearTimeout(suggestionTimeout);
+            
+            if (query.length < 2) {
+                this.hideSuggestions();
+                return;
+            }
+            
+            suggestionTimeout = setTimeout(() => {
+                this.showSymbolSuggestions(query);
+            }, 300);
+        });
+        
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!symbolInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                this.hideSuggestions();
+            }
+        });
+    },
+
+    showSymbolSuggestions(query) {
+        const suggestionsDiv = document.getElementById('symbol-suggestions');
+        if (!suggestionsDiv) return;
+        
+        const suggestions = this.getSymbolSuggestions(query);
+        
+        if (suggestions.length === 0) {
+            this.hideSuggestions();
+            return;
+        }
+        
+        suggestionsDiv.innerHTML = suggestions.map(suggestion => `
+            <div class="suggestion-item" data-symbol="${suggestion.symbol}">
+                <div class="suggestion-main">
+                    <span class="suggestion-symbol">${suggestion.symbol}</span>
+                    <span class="suggestion-name">${suggestion.name}</span>
+                </div>
+                <span class="suggestion-exchange ${suggestion.exchange.toLowerCase()}">${suggestion.exchange}</span>
+            </div>
+        `).join('');
+        
+        // Add click handlers
+        suggestionsDiv.querySelectorAll('.suggestion-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const symbol = item.dataset.symbol;
+                document.getElementById('analysis-symbol').value = symbol;
+                this.hideSuggestions();
+                this.analyzeSymbol();
+            });
+        });
+        
+        suggestionsDiv.classList.add('show');
+    },
+
+    hideSuggestions() {
+        const suggestionsDiv = document.getElementById('symbol-suggestions');
+        if (suggestionsDiv) {
+            suggestionsDiv.classList.remove('show');
+        }
+    },
+
+    getSymbolSuggestions(query) {
+        if (this.selectedMarket === 'IN') {
+            return this.getIndianStockSuggestions(query);
+        } else {
+            return this.getUSStockSuggestions(query);
+        }
+    },
+
+    getIndianStockSuggestions(query) {
+        const indianStocks = [
+            // Banking & Financial Services
+            { symbol: 'HDFCBANK', name: 'HDFC Bank Ltd', exchange: 'NSE' },
+            { symbol: 'ICICIBANK', name: 'ICICI Bank Ltd', exchange: 'NSE' },
+            { symbol: 'SBIN', name: 'State Bank of India', exchange: 'NSE' },
+            { symbol: 'KOTAKBANK', name: 'Kotak Mahindra Bank', exchange: 'NSE' },
+            { symbol: 'AXISBANK', name: 'Axis Bank Ltd', exchange: 'NSE' },
+            { symbol: 'BAJFINANCE', name: 'Bajaj Finance Ltd', exchange: 'NSE' },
+            
+            // Technology
+            { symbol: 'TCS', name: 'Tata Consultancy Services', exchange: 'NSE' },
+            { symbol: 'INFY', name: 'Infosys Ltd', exchange: 'NSE' },
+            { symbol: 'WIPRO', name: 'Wipro Ltd', exchange: 'NSE' },
+            { symbol: 'HCLTECH', name: 'HCL Technologies Ltd', exchange: 'NSE' },
+            { symbol: 'TECHM', name: 'Tech Mahindra Ltd', exchange: 'NSE' },
+            
+            // Conglomerates & Energy
+            { symbol: 'RELIANCE', name: 'Reliance Industries Ltd', exchange: 'NSE' },
+            { symbol: 'ADANIPORTS', name: 'Adani Ports & SEZ Ltd', exchange: 'NSE' },
+            { symbol: 'ONGC', name: 'Oil & Natural Gas Corp', exchange: 'NSE' },
+            
+            // Consumer Goods
+            { symbol: 'HINDUNILVR', name: 'Hindustan Unilever Ltd', exchange: 'NSE' },
+            { symbol: 'ITC', name: 'ITC Ltd', exchange: 'NSE' },
+            { symbol: 'NESTLEIND', name: 'Nestle India Ltd', exchange: 'NSE' },
+            { symbol: 'BRITANNIA', name: 'Britannia Industries Ltd', exchange: 'NSE' },
+            
+            // Automotive
+            { symbol: 'MARUTI', name: 'Maruti Suzuki India Ltd', exchange: 'NSE' },
+            { symbol: 'M&M', name: 'Mahindra & Mahindra Ltd', exchange: 'NSE' },
+            { symbol: 'TATAMOTORS', name: 'Tata Motors Ltd', exchange: 'NSE' },
+            { symbol: 'BAJAJ-AUTO', name: 'Bajaj Auto Ltd', exchange: 'NSE' },
+            
+            // Infrastructure & Construction
+            { symbol: 'LT', name: 'Larsen & Toubro Ltd', exchange: 'NSE' },
+            { symbol: 'ULTRACEMCO', name: 'UltraTech Cement Ltd', exchange: 'NSE' },
+            
+            // Telecom
+            { symbol: 'BHARTIARTL', name: 'Bharti Airtel Ltd', exchange: 'NSE' },
+            
+            // Retail & Consumer
+            { symbol: 'TITAN', name: 'Titan Company Ltd', exchange: 'NSE' },
+            { symbol: 'ASIANPAINT', name: 'Asian Paints Ltd', exchange: 'NSE' },
+            
+            // Pharmaceuticals
+            { symbol: 'SUNPHARMA', name: 'Sun Pharmaceutical Industries', exchange: 'NSE' },
+            { symbol: 'DRREDDY', name: 'Dr Reddys Laboratories Ltd', exchange: 'NSE' },
+            
+            // Metals & Mining
+            { symbol: 'TATASTEEL', name: 'Tata Steel Ltd', exchange: 'NSE' },
+            { symbol: 'HINDALCO', name: 'Hindalco Industries Ltd', exchange: 'NSE' }
+        ];
+        
+        return indianStocks.filter(stock => 
+            stock.symbol.includes(query) || 
+            stock.name.toUpperCase().includes(query)
+        ).slice(0, 8);
+    },
+
+    getUSStockSuggestions(query) {
+        const usStocks = [
+            { symbol: 'AAPL', name: 'Apple Inc', exchange: 'NASDAQ' },
+            { symbol: 'MSFT', name: 'Microsoft Corp', exchange: 'NASDAQ' },
+            { symbol: 'GOOGL', name: 'Alphabet Inc', exchange: 'NASDAQ' },
+            { symbol: 'AMZN', name: 'Amazon.com Inc', exchange: 'NASDAQ' },
+            { symbol: 'TSLA', name: 'Tesla Inc', exchange: 'NASDAQ' },
+            { symbol: 'META', name: 'Meta Platforms Inc', exchange: 'NASDAQ' },
+            { symbol: 'NVDA', name: 'NVIDIA Corp', exchange: 'NASDAQ' },
+            { symbol: 'NFLX', name: 'Netflix Inc', exchange: 'NASDAQ' },
+            { symbol: 'JPM', name: 'JPMorgan Chase & Co', exchange: 'NYSE' },
+            { symbol: 'JNJ', name: 'Johnson & Johnson', exchange: 'NYSE' },
+            { symbol: 'V', name: 'Visa Inc', exchange: 'NYSE' },
+            { symbol: 'PG', name: 'Procter & Gamble Co', exchange: 'NYSE' },
+            { symbol: 'UNH', name: 'UnitedHealth Group Inc', exchange: 'NYSE' },
+            { symbol: 'HD', name: 'Home Depot Inc', exchange: 'NYSE' },
+            { symbol: 'MA', name: 'Mastercard Inc', exchange: 'NYSE' }
+        ];
+        
+        return usStocks.filter(stock => 
+            stock.symbol.includes(query) || 
+            stock.name.toUpperCase().includes(query)
+        ).slice(0, 8);
+    },
+
+    clearAnalysis() {
+        this.currentSymbol = null;
+        this.currentData = null;
+        
+        // Clear charts
+        const chartIds = ['analysis-chart', 'rsi-chart', 'volume-chart', 'macd-chart', 'stochastic-chart'];
+        chartIds.forEach(id => this.clearChart(id));
+        
+        // Reset stock overview
+        document.getElementById('current-symbol').textContent = '--';
+        document.getElementById('current-stock-name').textContent = 'Select a symbol';
+        document.getElementById('current-price').textContent = this.currentCurrency === 'INR' ? '₹--' : '$--';
+        document.getElementById('price-change').textContent = '--';
+        
+        // Update range displays with correct currency
+        const currencySymbol = this.currentCurrency === 'INR' ? '₹' : '$';
+        document.getElementById('day-range').textContent = `${currencySymbol}-- - ${currencySymbol}--`;
+        document.getElementById('week-range').textContent = `${currencySymbol}-- - ${currencySymbol}--`;
+        
+        // Hide AI analysis
+        this.hideAIError();
+        this.hideAILoading();
+        const resultsDiv = document.getElementById('ai-analysis-results');
+        if (resultsDiv) {
+            resultsDiv.style.display = 'none';
+        }
+    },
+
+    updateMarketStatus() {
+        const statusDot = document.getElementById('market-status-dot');
+        const statusText = document.getElementById('market-status-text');
+        
+        if (!statusDot || !statusText) return;
+        
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const currentTime = currentHour * 60 + currentMinute;
+        
+        let isOpen = false;
+        let statusMessage = '';
+        
+        if (this.selectedMarket === 'IN') {
+            // Indian market hours: 9:15 AM - 3:30 PM IST (Monday-Friday)
+            const marketOpen = 9 * 60 + 15; // 9:15 AM
+            const marketClose = 15 * 60 + 30; // 3:30 PM
+            
+            const isWeekday = now.getDay() >= 1 && now.getDay() <= 5;
+            isOpen = isWeekday && currentTime >= marketOpen && currentTime <= marketClose;
+            
+            if (isOpen) {
+                statusMessage = 'NSE/BSE Open';
+            } else if (isWeekday && currentTime < marketOpen) {
+                const minutesToOpen = marketOpen - currentTime;
+                const hoursToOpen = Math.floor(minutesToOpen / 60);
+                const minsToOpen = minutesToOpen % 60;
+                statusMessage = `Opens in ${hoursToOpen}h ${minsToOpen}m`;
+            } else if (isWeekday && currentTime > marketClose) {
+                statusMessage = 'NSE/BSE Closed';
+            } else {
+                statusMessage = 'Weekend - Closed';
+            }
+        } else {
+            // US market hours: 9:30 AM - 4:00 PM EST (Monday-Friday)
+            const marketOpen = 9 * 60 + 30; // 9:30 AM
+            const marketClose = 16 * 60; // 4:00 PM
+            
+            const isWeekday = now.getDay() >= 1 && now.getDay() <= 5;
+            isOpen = isWeekday && currentTime >= marketOpen && currentTime <= marketClose;
+            
+            if (isOpen) {
+                statusMessage = 'NYSE/NASDAQ Open';
+            } else if (isWeekday && currentTime < marketOpen) {
+                const minutesToOpen = marketOpen - currentTime;
+                const hoursToOpen = Math.floor(minutesToOpen / 60);
+                const minsToOpen = minutesToOpen % 60;
+                statusMessage = `Opens in ${hoursToOpen}h ${minsToOpen}m`;
+            } else if (isWeekday && currentTime > marketClose) {
+                statusMessage = 'NYSE/NASDAQ Closed';
+            } else {
+                statusMessage = 'Weekend - Closed';
+            }
+        }
+        
+        statusDot.className = `market-status-dot ${isOpen ? '' : 'closed'}`;
+        statusText.textContent = statusMessage;
+        
+        // Update every minute
+        setTimeout(() => this.updateMarketStatus(), 60000);
     }
 };
 

@@ -142,14 +142,14 @@ def render_analysis():
             index=2,  # Default to 6 months
             help="Choose the time period for analysis"
         )
-        
+    
         # Custom date range if selected
         if time_range == "Custom":
             col1, col2 = st.columns(2)
-            with col1:
-                start_date = st.date_input("Start Date", value=datetime.now() - timedelta(days=180))
-            with col2:
-                end_date = st.date_input("End Date", value=datetime.now())
+    with col1:
+        start_date = st.date_input("Start Date", value=datetime.now() - timedelta(days=180))
+    with col2:
+        end_date = st.date_input("End Date", value=datetime.now())
         else:
             # Calculate dates based on selection
             end_date = datetime.now()
@@ -566,7 +566,7 @@ def render_technical_analysis(symbol, start_date, end_date, run_analysis):
                         # Golden/Death Cross detection
                         if last_ma50 > last_ma200:
                             cross_signal = "🌟 Golden Cross"
-                        else:
+                    else:
                             cross_signal = "💀 Death Cross"
                         st.metric("Cross Signal", cross_signal)
                     
@@ -582,7 +582,7 @@ def render_technical_analysis(symbol, start_date, end_date, run_analysis):
                             bb_signal = "🔴 Overbought"
                         elif bb_position < 20:
                             bb_signal = "🟢 Oversold"
-                        else:
+                    else:
                             bb_signal = "🟡 Neutral"
                         st.metric("BB Signal", bb_signal, f"{bb_position:.1f}%")
                     
