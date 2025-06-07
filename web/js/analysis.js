@@ -30,6 +30,30 @@ const Analysis = {
                 }
             });
         }
+
+        // Setup time range buttons
+        this.setupTimeRangeButtons();
+    },
+
+    setupTimeRangeButtons() {
+        const timeRangeButtons = document.querySelectorAll('.time-range-btn');
+        timeRangeButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Remove active class from all buttons
+                timeRangeButtons.forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                e.target.classList.add('active');
+                
+                // Get the selected range
+                const range = e.target.dataset.range;
+                this.selectedTimeRange = range;
+                
+                // Re-analyze with new time range if we have a current symbol
+                if (this.currentSymbol) {
+                    this.analyzeSymbol();
+                }
+            });
+        });
     },
 
     setupIndicatorToggles() {
@@ -242,7 +266,9 @@ const Analysis = {
                 }
             };
 
-            // Update metrics display
+            // Update all sidebar components
+            window.ChartManager.updateStockOverview(symbol, historicalData);
+            window.ChartManager.updateQuickAnalysis(symbol, historicalData, technicalData);
             window.ChartManager.updateAnalysisMetrics(symbol, historicalData, technicalData);
 
         } catch (error) {

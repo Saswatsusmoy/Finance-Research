@@ -415,22 +415,47 @@ const Utils = {
 
     // Advanced Technical Analysis Calculations
     calculateMACD: function(prices, fastPeriod = 12, slowPeriod = 26, signalPeriod = 9) {
+        if (!prices || prices.length < slowPeriod) {
+            return { macdLine: [], signalLine: [], histogram: [] };
+        }
+
         const fastEMA = this.calculateEMA(prices, fastPeriod);
         const slowEMA = this.calculateEMA(prices, slowPeriod);
         
+        // Calculate MACD line
         const macdLine = [];
         for (let i = 0; i < prices.length; i++) {
-            if (fastEMA[i] && slowEMA[i]) {
+            if (fastEMA[i] !== undefined && slowEMA[i] !== undefined) {
                 macdLine[i] = fastEMA[i] - slowEMA[i];
             }
         }
         
-        const signalLine = this.calculateEMA(macdLine.filter(x => x !== undefined), signalPeriod);
-        const histogram = [];
+        // Filter out undefined values for signal line calculation
+        const validMacdValues = macdLine.filter(x => x !== undefined);
+        if (validMacdValues.length < signalPeriod) {
+            return { macdLine, signalLine: [], histogram: [] };
+        }
         
+        // Calculate signal line
+        const signalEMA = this.calculateEMA(validMacdValues, signalPeriod);
+        
+        // Align signal line with MACD line indices
+        const signalLine = [];
+        let signalIndex = 0;
         for (let i = 0; i < macdLine.length; i++) {
-            if (macdLine[i] !== undefined && signalLine[i - (slowPeriod - 1)]) {
-                histogram[i] = macdLine[i] - signalLine[i - (slowPeriod - 1)];
+            if (macdLine[i] !== undefined) {
+                if (signalIndex < signalEMA.length) {
+                    signalLine[i] = signalEMA[signalIndex];
+                    signalIndex++;
+                }
+            }
+        }
+        
+        // Calculate histogram
+        const histogram = [];
+        for (let i = 0; i < macdLine.length; i++) {
+            if (macdLine[i] !== undefined && signalLine[i] !== undefined) {
+                histogram[i] = macdLine[i] - signalLine[i];
             }
         }
         

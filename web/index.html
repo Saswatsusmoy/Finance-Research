@@ -305,44 +305,129 @@
 
             <div class="analysis-container">
                 <div class="analysis-sidebar">
+                    <!-- Stock Overview Section -->
+                    <div class="stock-overview" id="stock-overview">
+                        <div class="stock-header">
+                            <div class="stock-symbol" id="current-symbol">--</div>
+                            <div class="stock-name" id="current-stock-name">Select a symbol</div>
+                        </div>
+                        <div class="stock-price-info">
+                            <div class="current-price" id="current-price">$--</div>
+                            <div class="price-change" id="price-change">--</div>
+                        </div>
+                        <div class="stock-range">
+                            <div class="range-item">
+                                <span class="range-label">Day Range</span>
+                                <span class="range-value" id="day-range">$-- - $--</span>
+                            </div>
+                            <div class="range-item">
+                                <span class="range-label">52W Range</span>
+                                <span class="range-value" id="week-range">$-- - $--</span>
+                            </div>
+                        </div>
+                        <div class="stock-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Volume</span>
+                                <span class="stat-value" id="current-volume">--</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Market Cap</span>
+                                <span class="stat-value" id="market-cap">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Time Range Selector -->
+                    <div class="time-range-panel">
+                        <h3>
+                            <i class="fas fa-calendar-alt"></i>
+                            Time Range
+                        </h3>
+                        <div class="time-range-buttons">
+                            <button class="time-range-btn" data-range="1D">1D</button>
+                            <button class="time-range-btn" data-range="5D">5D</button>
+                            <button class="time-range-btn" data-range="1M">1M</button>
+                            <button class="time-range-btn active" data-range="3M">3M</button>
+                            <button class="time-range-btn" data-range="6M">6M</button>
+                            <button class="time-range-btn" data-range="1Y">1Y</button>
+                            <button class="time-range-btn" data-range="5Y">5Y</button>
+                        </div>
+                    </div>
+
+                    <!-- Technical Indicators Panel -->
                     <div class="indicator-panel">
-                        <h3>Technical Indicators</h3>
+                        <h3>
+                            <i class="fas fa-chart-line"></i>
+                            Technical Indicators
+                        </h3>
                         <div class="indicator-group">
                             <label class="checkbox-label">
                                 <input type="checkbox" checked data-indicator="ma">
                                 <span class="checkmark"></span>
-                                Moving Averages
+                                <span class="indicator-name">Moving Averages</span>
+                                <span class="indicator-badge">MA</span>
                             </label>
                             <label class="checkbox-label">
                                 <input type="checkbox" checked data-indicator="rsi">
                                 <span class="checkmark"></span>
-                                RSI
+                                <span class="indicator-name">RSI</span>
+                                <span class="indicator-badge rsi">RSI</span>
                             </label>
                             <label class="checkbox-label">
                                 <input type="checkbox" data-indicator="macd">
                                 <span class="checkmark"></span>
-                                MACD
+                                <span class="indicator-name">MACD</span>
+                                <span class="indicator-badge macd">MACD</span>
                             </label>
                             <label class="checkbox-label">
                                 <input type="checkbox" data-indicator="bollinger">
                                 <span class="checkmark"></span>
-                                Bollinger Bands
+                                <span class="indicator-name">Bollinger Bands</span>
+                                <span class="indicator-badge bb">BB</span>
                             </label>
                             <label class="checkbox-label">
                                 <input type="checkbox" data-indicator="vwap">
                                 <span class="checkmark"></span>
-                                VWAP
+                                <span class="indicator-name">VWAP</span>
+                                <span class="indicator-badge vwap">VWAP</span>
                             </label>
                             <label class="checkbox-label">
                                 <input type="checkbox" data-indicator="stochastic">
                                 <span class="checkmark"></span>
-                                Stochastic
+                                <span class="indicator-name">Stochastic</span>
+                                <span class="indicator-badge stoch">STOCH</span>
                             </label>
                         </div>
                     </div>
 
+                    <!-- Quick Analysis Panel -->
+                    <div class="quick-analysis-panel">
+                        <h3>
+                            <i class="fas fa-tachometer-alt"></i>
+                            Quick Analysis
+                        </h3>
+                        <div class="analysis-summary" id="analysis-summary">
+                            <div class="summary-item">
+                                <span class="summary-label">Trend</span>
+                                <span class="summary-value trend" id="trend-indicator">--</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Momentum</span>
+                                <span class="summary-value momentum" id="momentum-indicator">--</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Volatility</span>
+                                <span class="summary-value volatility" id="volatility-indicator">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Metrics Panel -->
                     <div class="analysis-metrics">
-                        <h3>Key Metrics</h3>
+                        <h3>
+                            <i class="fas fa-chart-bar"></i>
+                            Key Metrics
+                        </h3>
                         <div class="metrics-grid" id="analysis-metrics">
                             <!-- Metrics will be populated dynamically -->
                         </div>
@@ -574,56 +659,159 @@
         <div id="reports-page" class="page">
             <div class="page-header">
                 <h1 class="page-title">Investment Reports</h1>
+                <p class="page-subtitle">Generate comprehensive financial reports with real-time data and advanced analytics</p>
             </div>
 
             <div class="reports-container">
                 <div class="report-selector">
+                    <h2><i class="fas fa-cog"></i> Report Configuration</h2>
+                    
                     <div class="report-types">
                         <div class="report-type-card active" data-type="portfolio">
                             <i class="fas fa-chart-pie"></i>
                             <h3>Portfolio Summary</h3>
-                            <p>Comprehensive portfolio analysis and performance metrics</p>
+                            <p>Comprehensive portfolio analysis with performance metrics, allocation breakdown, and risk assessment</p>
                         </div>
                         <div class="report-type-card" data-type="market">
                             <i class="fas fa-globe"></i>
                             <h3>Market Analysis</h3>
-                            <p>Sector performance and market breadth indicators</p>
+                            <p>Sector performance, market breadth indicators, and economic trend analysis</p>
                         </div>
                         <div class="report-type-card" data-type="stock">
                             <i class="fas fa-chart-line"></i>
                             <h3>Stock Research</h3>
-                            <p>Individual stock analysis with technical and fundamental data</p>
+                            <p>Individual stock analysis with technical indicators, fundamental data, and price targets</p>
                         </div>
                         <div class="report-type-card" data-type="risk">
                             <i class="fas fa-shield-alt"></i>
                             <h3>Risk Assessment</h3>
-                            <p>Portfolio risk metrics and stress testing scenarios</p>
+                            <p>Portfolio risk metrics, stress testing scenarios, and correlation analysis</p>
+                        </div>
+                        <div class="report-type-card" data-type="performance">
+                            <i class="fas fa-trophy"></i>
+                            <h3>Performance Analytics</h3>
+                            <p>Detailed performance attribution, benchmark comparison, and return analysis</p>
+                        </div>
+                        <div class="report-type-card" data-type="esg">
+                            <i class="fas fa-leaf"></i>
+                            <h3>ESG Analysis</h3>
+                            <p>Environmental, Social, and Governance scoring with sustainability metrics</p>
                         </div>
                     </div>
 
                     <div class="report-options">
-                        <div class="date-range">
-                            <label>Date Range:</label>
-                            <input type="date" id="start-date" class="date-input">
-                            <input type="date" id="end-date" class="date-input">
+                        <div class="option-group">
+                            <label>Date Range</label>
+                            <div class="date-range">
+                                <input type="date" id="start-date" class="date-input" title="Start Date">
+                                <input type="date" id="end-date" class="date-input" title="End Date">
+                            </div>
                         </div>
-                        <div class="format-options">
-                            <label>Format:</label>
+
+                        <div class="option-group">
+                            <label>Stock Symbol (for Stock Research)</label>
+                            <input type="text" id="stock-symbol" class="select-input" placeholder="e.g., AAPL, MSFT, GOOGL" style="display: none;">
+                        </div>
+
+                        <div class="option-group">
+                            <label>Report Format</label>
                             <select id="report-format" class="select-input">
                                 <option value="interactive">Interactive Dashboard</option>
                                 <option value="pdf">PDF Report</option>
                                 <option value="excel">Excel Export</option>
+                                <option value="powerpoint">PowerPoint Presentation</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary btn-large" id="generate-report">
-                            <i class="fas fa-file-chart"></i>
+
+                        <div class="option-group">
+                            <label>Report Options</label>
+                            <div class="checkbox-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="include-charts" checked>
+                                    <label for="include-charts">Include Charts & Visualizations</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="include-raw-data">
+                                    <label for="include-raw-data">Include Raw Data Tables</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="include-recommendations" checked>
+                                    <label for="include-recommendations">Include AI Recommendations</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="include-benchmarks" checked>
+                                    <label for="include-benchmarks">Include Benchmark Comparisons</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn-toggle-filters" id="toggle-advanced-filters">
+                            <i class="fas fa-chevron-down"></i>
+                            Advanced Filters
+                        </button>
+
+                        <div class="advanced-filters" id="advanced-filters">
+                            <h4><i class="fas fa-filter"></i> Advanced Options</h4>
+                            <div class="filter-grid">
+                                <div class="filter-item">
+                                    <label>Sectors</label>
+                                    <select multiple class="select-input">
+                                        <option value="technology">Technology</option>
+                                        <option value="healthcare">Healthcare</option>
+                                        <option value="financials">Financials</option>
+                                        <option value="energy">Energy</option>
+                                        <option value="consumer">Consumer</option>
+                                    </select>
+                                </div>
+                                <div class="filter-item">
+                                    <label>Market Cap</label>
+                                    <select class="select-input">
+                                        <option value="all">All Sizes</option>
+                                        <option value="large">Large Cap (>$10B)</option>
+                                        <option value="mid">Mid Cap ($2B-$10B)</option>
+                                        <option value="small">Small Cap (<$2B)</option>
+                                    </select>
+                                </div>
+                                <div class="filter-item">
+                                    <label>Risk Level</label>
+                                    <select class="select-input">
+                                        <option value="all">All Risk Levels</option>
+                                        <option value="low">Low Risk</option>
+                                        <option value="medium">Medium Risk</option>
+                                        <option value="high">High Risk</option>
+                                    </select>
+                                </div>
+                                <div class="filter-item">
+                                    <label>Currency</label>
+                                    <select class="select-input">
+                                        <option value="usd">USD</option>
+                                        <option value="eur">EUR</option>
+                                        <option value="gbp">GBP</option>
+                                        <option value="jpy">JPY</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn-generate-report" id="generate-report">
+                            <i class="fas fa-chart-bar"></i>
                             Generate Report
                         </button>
                     </div>
                 </div>
 
                 <div class="report-content" id="report-content">
-                    <!-- Report content will be generated here -->
+                    <div class="report-empty">
+                        <i class="fas fa-file-chart"></i>
+                        <h3>Ready to Generate Reports</h3>
+                        <p>Select a report type and configure your options to generate comprehensive financial analysis reports with real-time data.</p>
+                        <div class="demo-actions">
+                            <button class="btn-report-action primary" onclick="Reports.generateDemoReport()">
+                                <i class="fas fa-play"></i>
+                                Try Demo Report
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

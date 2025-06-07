@@ -6,11 +6,103 @@
 class ChartManager {
     constructor() {
         this.charts = new Map();
-        this.defaultColors = Utils.getChartColors('dark');
+        this.defaultColors = this.getEnhancedChartColors();
         this.chartConfig = {
             displayModeBar: false,
             responsive: true,
-            displaylogo: false
+            displaylogo: false,
+            modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+            doubleClick: 'reset+autosize'
+        };
+    }
+
+    // Enhanced color scheme for better visual appeal
+    getEnhancedChartColors() {
+        return {
+            primary: '#00d2ff',
+            secondary: '#3a7bd5',
+            success: '#10b981',
+            danger: '#ef4444',
+            warning: '#f59e0b',
+            purple: '#8b5cf6',
+            pink: '#ec4899',
+            teal: '#14b8a6',
+            orange: '#f97316',
+            background: 'rgba(15, 23, 42, 0.8)',
+            grid: 'rgba(148, 163, 184, 0.1)',
+            text: '#e2e8f0',
+            cardBg: 'rgba(30, 41, 59, 0.8)',
+            gradient: {
+                primary: 'linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%)',
+                success: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                danger: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+            }
+        };
+    }
+
+    // Enhanced layout configuration
+    getEnhancedLayout(title, height = 400) {
+        return {
+            title: {
+                text: title,
+                font: { 
+                    size: 18, 
+                    color: this.defaultColors.text, 
+                    family: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' 
+                },
+                x: 0.02,
+                y: 0.98
+            },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { 
+                color: this.defaultColors.text, 
+                family: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+                size: 12
+            },
+            xaxis: {
+                gridcolor: this.defaultColors.grid,
+                showgrid: true,
+                color: this.defaultColors.text,
+                tickformat: '%Y-%m-%d',
+                showline: true,
+                linecolor: this.defaultColors.grid,
+                mirror: true,
+                tickfont: { size: 11 }
+            },
+            yaxis: {
+                gridcolor: this.defaultColors.grid,
+                showgrid: true,
+                color: this.defaultColors.text,
+                showline: true,
+                linecolor: this.defaultColors.grid,
+                mirror: true,
+                tickfont: { size: 11 }
+            },
+            margin: { t: 50, r: 30, b: 50, l: 60 },
+            height: height,
+            legend: {
+                orientation: 'h',
+                yanchor: 'bottom',
+                y: -0.2,
+                xanchor: 'center',
+                x: 0.5,
+                bgcolor: 'rgba(0,0,0,0.3)',
+                bordercolor: this.defaultColors.grid,
+                borderwidth: 1,
+                font: { size: 11 }
+            },
+            hovermode: 'x unified',
+            hoverlabel: {
+                bgcolor: 'rgba(0,0,0,0.9)',
+                bordercolor: this.defaultColors.primary,
+                font: { color: 'white', size: 12 },
+                borderwidth: 2
+            },
+            transition: {
+                duration: 500,
+                easing: 'cubic-in-out'
+            }
         };
     }
 
@@ -52,7 +144,7 @@ class ChartManager {
             const traces = [];
             const historicalData = data.data;
 
-            // Main price trace (candlestick or line)
+            // Enhanced candlestick chart
             const priceTrace = {
                 x: historicalData.map(d => d.date),
                 open: historicalData.map(d => d.open),
@@ -61,36 +153,60 @@ class ChartManager {
                 close: historicalData.map(d => d.close),
                 type: 'candlestick',
                 name: symbol,
-                increasing: { line: { color: this.defaultColors.success } },
-                decreasing: { line: { color: this.defaultColors.danger } },
-                showlegend: false
+                increasing: { 
+                    line: { color: this.defaultColors.success, width: 1.5 },
+                    fillcolor: this.defaultColors.success
+                },
+                decreasing: { 
+                    line: { color: this.defaultColors.danger, width: 1.5 },
+                    fillcolor: this.defaultColors.danger
+                },
+                showlegend: false,
+                hovertemplate: '<b>%{x}</b><br>' +
+                              'Open: $%{open:.2f}<br>' +
+                              'High: $%{high:.2f}<br>' +
+                              'Low: $%{low:.2f}<br>' +
+                              'Close: $%{close:.2f}<extra></extra>'
             };
             traces.push(priceTrace);
 
-            // Add technical indicators
+            // Add technical indicators with enhanced styling
             if (indicators.includes('ma')) {
                 const closes = historicalData.map(d => d.close);
                 const sma20 = Utils.calculateSMA(closes, 20);
                 const sma50 = Utils.calculateSMA(closes, 50);
 
-                // SMA 20
+                // SMA 20 with gradient effect
                 traces.push({
                     x: historicalData.slice(19).map(d => d.date),
                     y: sma20,
                     type: 'scatter',
                     mode: 'lines',
                     name: 'SMA 20',
-                    line: { color: this.defaultColors.primary, width: 1 }
+                    line: { 
+                        color: this.defaultColors.warning, 
+                        width: 2,
+                        shape: 'spline',
+                        smoothing: 0.3
+                    },
+                    hovertemplate: '<b>SMA 20</b><br>%{x}<br>$%{y:.2f}<extra></extra>'
                 });
 
-                // SMA 50
+                // SMA 50 with enhanced styling
                 traces.push({
                     x: historicalData.slice(49).map(d => d.date),
                     y: sma50,
                     type: 'scatter',
                     mode: 'lines',
                     name: 'SMA 50',
-                    line: { color: this.defaultColors.warning, width: 1 }
+                    line: { 
+                        color: this.defaultColors.purple, 
+                        width: 2,
+                        shape: 'spline',
+                        smoothing: 0.3,
+                        dash: 'dash'
+                    },
+                    hovertemplate: '<b>SMA 50</b><br>%{x}<br>$%{y:.2f}<extra></extra>'
                 });
             }
 
@@ -104,10 +220,15 @@ class ChartManager {
                     y: bollingerBands.upper,
                     type: 'scatter',
                     mode: 'lines',
-                    name: 'Upper BB',
-                    line: { color: this.defaultColors.secondary, width: 1, dash: 'dot' },
+                    name: 'BB Upper',
+                    line: { 
+                        color: this.defaultColors.secondary, 
+                        width: 1.5, 
+                        dash: 'dot' 
+                    },
                     fill: 'tonexty',
-                    fillcolor: 'rgba(58, 123, 213, 0.1)'
+                    fillcolor: 'rgba(58, 123, 213, 0.08)',
+                    hovertemplate: '<b>BB Upper</b><br>%{x}<br>$%{y:.2f}<extra></extra>'
                 });
 
                 // Lower band
@@ -116,8 +237,13 @@ class ChartManager {
                     y: bollingerBands.lower,
                     type: 'scatter',
                     mode: 'lines',
-                    name: 'Lower BB',
-                    line: { color: this.defaultColors.secondary, width: 1, dash: 'dot' }
+                    name: 'BB Lower',
+                    line: { 
+                        color: this.defaultColors.secondary, 
+                        width: 1.5, 
+                        dash: 'dot' 
+                    },
+                    hovertemplate: '<b>BB Lower</b><br>%{x}<br>$%{y:.2f}<extra></extra>'
                 });
             }
 
@@ -136,39 +262,24 @@ class ChartManager {
                     type: 'scatter',
                     mode: 'lines',
                     name: 'VWAP',
-                    line: { color: this.defaultColors.warning, width: 2 }
+                    line: { 
+                        color: this.defaultColors.teal, 
+                        width: 2.5,
+                        shape: 'spline',
+                        smoothing: 0.2
+                    },
+                    hovertemplate: '<b>VWAP</b><br>%{x}<br>$%{y:.2f}<extra></extra>'
                 });
             }
 
-            const layout = {
-                paper_bgcolor: 'transparent',
-                plot_bgcolor: 'transparent',
-                font: { color: this.defaultColors.text, family: 'Inter, sans-serif' },
-                xaxis: {
-                    gridcolor: this.defaultColors.grid,
-                    showgrid: true,
-                    color: this.defaultColors.text,
-                    tickformat: '%Y-%m-%d'
-                },
-                yaxis: {
-                    gridcolor: this.defaultColors.grid,
-                    showgrid: true,
-                    color: this.defaultColors.text,
-                    title: 'Price ($)'
-                },
-                margin: { t: 30, r: 30, b: 50, l: 60 },
-                height: 400,
-                legend: {
-                    x: 0,
-                    y: 1,
-                    bgcolor: 'rgba(0,0,0,0.5)',
-                    bordercolor: this.defaultColors.grid,
-                    borderwidth: 1
-                }
-            };
+            const layout = this.getEnhancedLayout(`${symbol} Price Analysis`, 450);
+            layout.yaxis.title = 'Price ($)';
 
             await Plotly.newPlot('analysis-chart', traces, layout, this.chartConfig);
             this.charts.set('analysis-chart', { traces, layout });
+            
+            // Add chart animations
+            this.addChartAnimations('analysis-chart');
             
             // Clear any residual loading indicators
             this.clearLoadingIndicators('analysis-chart');
@@ -179,7 +290,7 @@ class ChartManager {
         }
     }
 
-    // Render RSI indicator chart
+    // Enhanced RSI indicator chart
     async renderRSIChart(symbol, data) {
         const chartContainer = document.getElementById('rsi-chart');
         if (!chartContainer || !data || !data.data || data.data.length === 0) {
@@ -198,116 +309,124 @@ class ChartManager {
                 type: 'scatter',
                 mode: 'lines',
                 name: 'RSI',
-                line: { color: this.defaultColors.primary, width: 2 }
+                line: { 
+                    color: this.defaultColors.purple, 
+                    width: 2.5,
+                    shape: 'spline',
+                    smoothing: 0.3
+                },
+                fill: 'tonexty',
+                fillcolor: 'rgba(139, 92, 246, 0.1)',
+                hovertemplate: '<b>RSI</b><br>%{x}<br>%{y:.1f}<extra></extra>'
             }];
 
-            // Add overbought/oversold lines
-            traces.push({
-                x: historicalData.slice(14).map(d => d.date),
-                y: new Array(rsi.length).fill(70),
-                type: 'scatter',
-                mode: 'lines',
-                name: 'Overbought (70)',
-                line: { color: this.defaultColors.danger, width: 1, dash: 'dash' }
-            });
-
-            traces.push({
-                x: historicalData.slice(14).map(d => d.date),
-                y: new Array(rsi.length).fill(30),
-                type: 'scatter',
-                mode: 'lines',
-                name: 'Oversold (30)',
-                line: { color: this.defaultColors.success, width: 1, dash: 'dash' }
-            });
-
-            const layout = {
-                paper_bgcolor: 'transparent',
-                plot_bgcolor: 'transparent',
-                font: { color: this.defaultColors.text, family: 'Inter, sans-serif' },
-                xaxis: {
-                    gridcolor: this.defaultColors.grid,
-                    showgrid: true,
-                    color: this.defaultColors.text
+            const layout = this.getEnhancedLayout(`${symbol} RSI`, 250);
+            layout.yaxis.title = 'RSI';
+            layout.yaxis.range = [0, 100];
+            
+            // Add reference lines
+            layout.shapes = [
+                {
+                    type: 'line',
+                    x0: historicalData[14].date,
+                    y0: 70,
+                    x1: historicalData[historicalData.length - 1].date,
+                    y1: 70,
+                    line: { color: this.defaultColors.danger, width: 1.5, dash: 'dash' }
                 },
-                yaxis: {
-                    gridcolor: this.defaultColors.grid,
-                    showgrid: true,
-                    color: this.defaultColors.text,
-                    title: 'RSI',
-                    range: [0, 100]
+                {
+                    type: 'line',
+                    x0: historicalData[14].date,
+                    y0: 30,
+                    x1: historicalData[historicalData.length - 1].date,
+                    y1: 30,
+                    line: { color: this.defaultColors.success, width: 1.5, dash: 'dash' }
                 },
-                margin: { t: 30, r: 30, b: 50, l: 60 },
-                height: 200,
-                showlegend: false
-            };
+                {
+                    type: 'line',
+                    x0: historicalData[14].date,
+                    y0: 50,
+                    x1: historicalData[historicalData.length - 1].date,
+                    y1: 50,
+                    line: { color: this.defaultColors.text, width: 1, dash: 'dot' }
+                }
+            ];
+
+            // Add annotations for overbought/oversold levels
+            layout.annotations = [
+                {
+                    x: historicalData[Math.floor(historicalData.length * 0.8)].date,
+                    y: 75,
+                    text: 'Overbought',
+                    showarrow: false,
+                    font: { color: this.defaultColors.danger, size: 10 }
+                },
+                {
+                    x: historicalData[Math.floor(historicalData.length * 0.8)].date,
+                    y: 25,
+                    text: 'Oversold',
+                    showarrow: false,
+                    font: { color: this.defaultColors.success, size: 10 }
+                }
+            ];
 
             await Plotly.newPlot('rsi-chart', traces, layout, this.chartConfig);
             this.charts.set('rsi-chart', { traces, layout });
-            this.clearLoadingIndicators('rsi-chart');
+            
+            this.addChartAnimations('rsi-chart');
 
         } catch (error) {
             console.error('Error rendering RSI chart:', error);
-            this.showChartError('rsi-chart', 'Error rendering RSI');
+            this.showChartError('rsi-chart', 'Error rendering RSI chart');
         }
     }
 
-    // Render volume chart
+    // Enhanced Volume chart
     async renderVolumeChart(symbol, data) {
         const chartContainer = document.getElementById('volume-chart');
         if (!chartContainer || !data || !data.data || data.data.length === 0) {
-            this.showChartError('volume-chart', 'No volume data');
+            this.showChartError('volume-chart', 'No data for Volume');
             return;
         }
 
         try {
             const historicalData = data.data;
+            
+            // Color code volume bars based on price movement
+            const volumeColors = historicalData.map(d => {
+                return d.close >= d.open ? 
+                    'rgba(16, 185, 129, 0.7)' : 
+                    'rgba(239, 68, 68, 0.7)';
+            });
 
-            const trace = {
+            const traces = [{
                 x: historicalData.map(d => d.date),
                 y: historicalData.map(d => d.volume),
                 type: 'bar',
                 name: 'Volume',
-                marker: {
-                    color: historicalData.map((d, i) => {
-                        if (i === 0) return this.defaultColors.primary;
-                        return d.close >= historicalData[i-1].close ? 
-                            this.defaultColors.success : this.defaultColors.danger;
-                    }),
-                    opacity: 0.7
-                }
-            };
-
-            const layout = {
-                paper_bgcolor: 'transparent',
-                plot_bgcolor: 'transparent',
-                font: { color: this.defaultColors.text, family: 'Inter, sans-serif' },
-                xaxis: {
-                    gridcolor: this.defaultColors.grid,
-                    showgrid: true,
-                    color: this.defaultColors.text
+                marker: { 
+                    color: volumeColors,
+                    line: { width: 0 }
                 },
-                yaxis: {
-                    gridcolor: this.defaultColors.grid,
-                    showgrid: true,
-                    color: this.defaultColors.text,
-                    title: 'Volume'
-                },
-                margin: { t: 30, r: 30, b: 50, l: 60 },
-                height: 150,
-                showlegend: false
-            };
+                hovertemplate: '<b>Volume</b><br>%{x}<br>%{y:,.0f}<extra></extra>'
+            }];
 
-            await Plotly.newPlot('volume-chart', [trace], layout, this.chartConfig);
-            this.charts.set('volume-chart', { traces: [trace], layout });
-            this.clearLoadingIndicators('volume-chart');
+            const layout = this.getEnhancedLayout(`${symbol} Volume`, 250);
+            layout.yaxis.title = 'Volume';
+            layout.bargap = 0.1;
+
+            await Plotly.newPlot('volume-chart', traces, layout, this.chartConfig);
+            this.charts.set('volume-chart', { traces, layout });
+            
+            this.addChartAnimations('volume-chart');
 
         } catch (error) {
             console.error('Error rendering volume chart:', error);
-            this.showChartError('volume-chart', 'Error rendering volume');
+            this.showChartError('volume-chart', 'Error rendering volume chart');
         }
     }
 
-    // Render MACD chart
+    // Enhanced MACD chart
     async renderMACDChart(symbol, data) {
         const chartContainer = document.getElementById('macd-chart');
         if (!chartContainer || !data || !data.data || data.data.length === 0) {
@@ -318,79 +437,170 @@ class ChartManager {
         try {
             const historicalData = data.data;
             const closes = historicalData.map(d => d.close);
+            
+            console.log(`MACD Chart Debug - Symbol: ${symbol}, Data points: ${closes.length}`);
+            
+            // Validate data
+            if (closes.length < 26) {
+                console.warn(`Insufficient data for MACD: ${closes.length} points, need at least 26`);
+                this.showChartError('macd-chart', `Insufficient data for MACD calculation (${closes.length} points, need 26+)`);
+                return;
+            }
+
             const macdData = Utils.calculateMACD(closes);
+            console.log('MACD Data calculated:', {
+                macdLineLength: macdData.macdLine.length,
+                signalLineLength: macdData.signalLine.length,
+                histogramLength: macdData.histogram.length
+            });
+            
+            // Check if MACD calculation was successful
+            if (!macdData || !macdData.macdLine || macdData.macdLine.length === 0) {
+                console.error('MACD calculation failed:', macdData);
+                this.showChartError('macd-chart', 'MACD calculation failed');
+                return;
+            }
 
             const traces = [];
 
-            // MACD Line
-            traces.push({
-                x: historicalData.slice(25).map(d => d.date),
-                y: macdData.macdLine.slice(25),
-                type: 'scatter',
-                mode: 'lines',
-                name: 'MACD',
-                line: { color: this.defaultColors.primary, width: 2 }
+            // Prepare data arrays with proper alignment
+            const validIndices = [];
+            const macdValues = [];
+            const signalValues = [];
+            const histogramValues = [];
+            const dates = [];
+
+            for (let i = 0; i < macdData.macdLine.length; i++) {
+                if (macdData.macdLine[i] !== undefined) {
+                    validIndices.push(i);
+                    macdValues.push(macdData.macdLine[i]);
+                    dates.push(historicalData[i].date);
+                    
+                    if (macdData.signalLine[i] !== undefined) {
+                        signalValues.push(macdData.signalLine[i]);
+                    }
+                    
+                    if (macdData.histogram[i] !== undefined) {
+                        histogramValues.push(macdData.histogram[i]);
+                    }
+                }
+            }
+
+            console.log('MACD Chart Data prepared:', {
+                macdValues: macdValues.length,
+                signalValues: signalValues.length,
+                histogramValues: histogramValues.length,
+                dates: dates.length
             });
 
-            // Signal Line
-            if (macdData.signalLine && macdData.signalLine.length > 0) {
+            // Enhanced Histogram with gradient colors
+            if (histogramValues.length > 0) {
+                const histogramColors = histogramValues.map(val => 
+                    val >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'
+                );
+
+                const histogramDates = [];
+                let histIndex = 0;
+                for (let i = 0; i < macdData.histogram.length; i++) {
+                    if (macdData.histogram[i] !== undefined) {
+                        histogramDates.push(historicalData[i].date);
+                    }
+                }
+
                 traces.push({
-                    x: historicalData.slice(33).map(d => d.date),
-                    y: macdData.signalLine,
+                    x: histogramDates,
+                    y: histogramValues,
+                    type: 'bar',
+                    name: 'MACD Histogram',
+                    marker: {
+                        color: histogramColors,
+                        line: { width: 0 }
+                    },
+                    hovertemplate: '<b>Histogram</b><br>%{x}<br>%{y:.4f}<extra></extra>'
+                });
+            }
+
+            // MACD Line with enhanced styling
+            if (macdValues.length > 0) {
+                traces.push({
+                    x: dates,
+                    y: macdValues,
                     type: 'scatter',
                     mode: 'lines',
-                    name: 'Signal',
-                    line: { color: this.defaultColors.danger, width: 2 }
+                    name: 'MACD Line',
+                    line: { 
+                        color: this.defaultColors.primary, 
+                        width: 2.5,
+                        shape: 'spline',
+                        smoothing: 0.3
+                    },
+                    hovertemplate: '<b>MACD</b><br>%{x}<br>%{y:.4f}<extra></extra>'
                 });
             }
 
-            // Histogram
-            if (macdData.histogram && macdData.histogram.length > 0) {
-                traces.push({
-                    x: historicalData.slice(33).map(d => d.date),
-                    y: macdData.histogram.slice(8),
-                    type: 'bar',
-                    name: 'Histogram',
-                    marker: {
-                        color: macdData.histogram.slice(8).map(val => 
-                            val >= 0 ? this.defaultColors.success : this.defaultColors.danger
-                        ),
-                        opacity: 0.6
+            // Signal Line with enhanced styling
+            if (signalValues.length > 0) {
+                const signalDates = [];
+                for (let i = 0; i < macdData.signalLine.length; i++) {
+                    if (macdData.signalLine[i] !== undefined) {
+                        signalDates.push(historicalData[i].date);
                     }
+                }
+
+                traces.push({
+                    x: signalDates,
+                    y: signalValues,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Signal Line',
+                    line: { 
+                        color: this.defaultColors.warning, 
+                        width: 2,
+                        dash: 'dash',
+                        shape: 'spline',
+                        smoothing: 0.3
+                    },
+                    hovertemplate: '<b>Signal</b><br>%{x}<br>%{y:.4f}<extra></extra>'
                 });
             }
 
-            const layout = {
-                paper_bgcolor: 'transparent',
-                plot_bgcolor: 'transparent',
-                font: { color: this.defaultColors.text, family: 'Inter, sans-serif' },
-                xaxis: {
-                    gridcolor: this.defaultColors.grid,
-                    showgrid: true,
-                    color: this.defaultColors.text
-                },
-                yaxis: {
-                    gridcolor: this.defaultColors.grid,
-                    showgrid: true,
-                    color: this.defaultColors.text,
-                    title: 'MACD'
-                },
-                margin: { t: 30, r: 30, b: 50, l: 60 },
-                height: 200,
-                showlegend: true
-            };
+            if (traces.length === 0) {
+                console.warn('No traces generated for MACD chart');
+                this.showChartError('macd-chart', 'No valid MACD data to display');
+                return;
+            }
+
+            console.log(`MACD Chart rendering with ${traces.length} traces`);
+
+            const layout = this.getEnhancedLayout(`${symbol} MACD`, 280);
+            layout.yaxis.title = 'MACD';
+            layout.bargap = 0.1;
+            
+            // Add zero line if we have valid data
+            if (dates.length > 0) {
+                layout.shapes = [{
+                    type: 'line',
+                    x0: dates[0],
+                    y0: 0,
+                    x1: dates[dates.length - 1],
+                    y1: 0,
+                    line: { color: this.defaultColors.text, width: 1, dash: 'dot' }
+                }];
+            }
 
             await Plotly.newPlot('macd-chart', traces, layout, this.chartConfig);
             this.charts.set('macd-chart', { traces, layout });
-            this.clearLoadingIndicators('macd-chart');
+            
+            this.addChartAnimations('macd-chart');
+            console.log('MACD Chart rendered successfully');
 
         } catch (error) {
             console.error('Error rendering MACD chart:', error);
-            this.showChartError('macd-chart', 'Error rendering MACD');
+            this.showChartError('macd-chart', `Error rendering MACD chart: ${error.message}`);
         }
     }
 
-    // Render Stochastic Oscillator chart
+    // Enhanced Stochastic Oscillator chart
     async renderStochasticChart(symbol, data) {
         const chartContainer = document.getElementById('stochastic-chart');
         if (!chartContainer || !data || !data.data || data.data.length === 0) {
@@ -407,76 +617,254 @@ class ChartManager {
 
             const traces = [];
 
-            // %K Line
+            // Enhanced %K Line with gradient fill
             traces.push({
                 x: historicalData.slice(13).map(d => d.date),
                 y: stochastic.k,
                 type: 'scatter',
                 mode: 'lines',
-                name: '%K',
-                line: { color: this.defaultColors.primary, width: 2 }
+                name: '%K (Fast)',
+                line: { 
+                    color: this.defaultColors.primary, 
+                    width: 2.5,
+                    shape: 'spline',
+                    smoothing: 0.3
+                },
+                fill: 'tonexty',
+                fillcolor: 'rgba(0, 210, 255, 0.1)',
+                hovertemplate: '<b>%K</b><br>%{x}<br>%{y:.1f}%<extra></extra>'
             });
 
-            // %D Line
+            // Enhanced %D Line
             traces.push({
                 x: historicalData.slice(16).map(d => d.date),
                 y: stochastic.d,
                 type: 'scatter',
                 mode: 'lines',
-                name: '%D',
-                line: { color: this.defaultColors.danger, width: 2 }
-            });
-
-            // Overbought/Oversold lines
-            traces.push({
-                x: historicalData.slice(13).map(d => d.date),
-                y: new Array(stochastic.k.length).fill(80),
-                type: 'scatter',
-                mode: 'lines',
-                name: 'Overbought (80)',
-                line: { color: this.defaultColors.danger, width: 1, dash: 'dash' },
-                showlegend: false
-            });
-
-            traces.push({
-                x: historicalData.slice(13).map(d => d.date),
-                y: new Array(stochastic.k.length).fill(20),
-                type: 'scatter',
-                mode: 'lines',
-                name: 'Oversold (20)',
-                line: { color: this.defaultColors.success, width: 1, dash: 'dash' },
-                showlegend: false
-            });
-
-            const layout = {
-                paper_bgcolor: 'transparent',
-                plot_bgcolor: 'transparent',
-                font: { color: this.defaultColors.text, family: 'Inter, sans-serif' },
-                xaxis: {
-                    gridcolor: this.defaultColors.grid,
-                    showgrid: true,
-                    color: this.defaultColors.text
+                name: '%D (Slow)',
+                line: { 
+                    color: this.defaultColors.warning, 
+                    width: 2,
+                    dash: 'dash',
+                    shape: 'spline',
+                    smoothing: 0.3
                 },
-                yaxis: {
-                    gridcolor: this.defaultColors.grid,
-                    showgrid: true,
-                    color: this.defaultColors.text,
-                    title: 'Stochastic %',
-                    range: [0, 100]
+                hovertemplate: '<b>%D</b><br>%{x}<br>%{y:.1f}%<extra></extra>'
+            });
+
+            const layout = this.getEnhancedLayout(`${symbol} Stochastic Oscillator`, 280);
+            layout.yaxis.title = 'Stochastic %';
+            layout.yaxis.range = [0, 100];
+            
+            // Add reference lines with enhanced styling
+            layout.shapes = [
+                {
+                    type: 'line',
+                    x0: historicalData[13].date,
+                    y0: 80,
+                    x1: historicalData[historicalData.length - 1].date,
+                    y1: 80,
+                    line: { color: this.defaultColors.danger, width: 1.5, dash: 'dash' }
                 },
-                margin: { t: 30, r: 30, b: 50, l: 60 },
-                height: 200,
-                showlegend: true
-            };
+                {
+                    type: 'line',
+                    x0: historicalData[13].date,
+                    y0: 20,
+                    x1: historicalData[historicalData.length - 1].date,
+                    y1: 20,
+                    line: { color: this.defaultColors.success, width: 1.5, dash: 'dash' }
+                },
+                {
+                    type: 'line',
+                    x0: historicalData[13].date,
+                    y0: 50,
+                    x1: historicalData[historicalData.length - 1].date,
+                    y1: 50,
+                    line: { color: this.defaultColors.text, width: 1, dash: 'dot' }
+                }
+            ];
+
+            // Add annotations for overbought/oversold levels
+            layout.annotations = [
+                {
+                    x: historicalData[Math.floor(historicalData.length * 0.8)].date,
+                    y: 85,
+                    text: 'Overbought',
+                    showarrow: false,
+                    font: { color: this.defaultColors.danger, size: 10 }
+                },
+                {
+                    x: historicalData[Math.floor(historicalData.length * 0.8)].date,
+                    y: 15,
+                    text: 'Oversold',
+                    showarrow: false,
+                    font: { color: this.defaultColors.success, size: 10 }
+                }
+            ];
 
             await Plotly.newPlot('stochastic-chart', traces, layout, this.chartConfig);
             this.charts.set('stochastic-chart', { traces, layout });
-            this.clearLoadingIndicators('stochastic-chart');
+            
+            this.addChartAnimations('stochastic-chart');
 
         } catch (error) {
             console.error('Error rendering Stochastic chart:', error);
-            this.showChartError('stochastic-chart', 'Error rendering Stochastic');
+            this.showChartError('stochastic-chart', 'Error rendering Stochastic chart');
         }
+    }
+
+    // Update stock overview section
+    updateStockOverview(symbol, data) {
+        try {
+            const currentData = data.data[data.data.length - 1];
+            const previousData = data.data[data.data.length - 2];
+            const change = currentData.close - previousData.close;
+            const changePercent = (change / previousData.close) * 100;
+
+            // Calculate ranges
+            const dayHigh = currentData.high;
+            const dayLow = currentData.low;
+            const highs = data.data.map(d => d.high);
+            const lows = data.data.map(d => d.low);
+            const high52w = Math.max(...highs);
+            const low52w = Math.min(...lows);
+            const currentVolume = currentData.volume;
+
+            // Update stock overview elements
+            document.getElementById('current-symbol').textContent = symbol.toUpperCase();
+            document.getElementById('current-stock-name').textContent = this.getCompanyName(symbol);
+            document.getElementById('current-price').textContent = Utils.formatCurrency(currentData.close);
+            
+            const priceChangeEl = document.getElementById('price-change');
+            priceChangeEl.textContent = `${change >= 0 ? '+' : ''}${Utils.formatCurrency(change)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`;
+            priceChangeEl.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
+
+            document.getElementById('day-range').textContent = `${Utils.formatCurrency(dayLow)} - ${Utils.formatCurrency(dayHigh)}`;
+            document.getElementById('week-range').textContent = `${Utils.formatCurrency(low52w)} - ${Utils.formatCurrency(high52w)}`;
+            document.getElementById('current-volume').textContent = Utils.formatVolume(currentVolume);
+            document.getElementById('market-cap').textContent = this.calculateMarketCap(currentData.close);
+        } catch (error) {
+            console.error('Error updating stock overview:', error);
+        }
+    }
+
+    // Get company name (simplified mapping)
+    getCompanyName(symbol) {
+        const companyNames = {
+            'AAPL': 'Apple Inc.',
+            'GOOGL': 'Alphabet Inc.',
+            'MSFT': 'Microsoft Corporation',
+            'AMZN': 'Amazon.com Inc.',
+            'TSLA': 'Tesla Inc.',
+            'META': 'Meta Platforms Inc.',
+            'NVDA': 'NVIDIA Corporation',
+            'NFLX': 'Netflix Inc.',
+            'SPY': 'SPDR S&P 500 ETF',
+            'QQQ': 'Invesco QQQ Trust',
+            'IWM': 'iShares Russell 2000 ETF'
+        };
+        return companyNames[symbol.toUpperCase()] || `${symbol.toUpperCase()} Corporation`;
+    }
+
+    // Calculate market cap (simplified)
+    calculateMarketCap(price) {
+        // This is a simplified calculation - in reality you'd need shares outstanding
+        const estimatedShares = 1000000000; // 1B shares as example
+        const marketCap = price * estimatedShares;
+        
+        if (marketCap >= 1e12) {
+            return `$${(marketCap / 1e12).toFixed(2)}T`;
+        } else if (marketCap >= 1e9) {
+            return `$${(marketCap / 1e9).toFixed(2)}B`;
+        } else if (marketCap >= 1e6) {
+            return `$${(marketCap / 1e6).toFixed(2)}M`;
+        }
+        return `$${marketCap.toFixed(0)}`;
+    }
+
+    // Update quick analysis
+    updateQuickAnalysis(symbol, data, technicalData) {
+        try {
+            const closes = data.data.map(d => d.close);
+            const volumes = data.data.map(d => d.volume);
+            
+            // Calculate trend
+            const trend = this.calculateTrend(closes);
+            
+            // Calculate momentum using RSI
+            const momentum = this.calculateMomentum(technicalData);
+            
+            // Calculate volatility
+            const volatility = this.calculateVolatilityLevel(closes);
+            
+            // Update trend indicator
+            const trendEl = document.getElementById('trend-indicator');
+            if (trendEl) {
+                trendEl.textContent = trend;
+                trendEl.className = `summary-value trend ${trend}`;
+            }
+            
+            // Update momentum indicator
+            const momentumEl = document.getElementById('momentum-indicator');
+            if (momentumEl) {
+                momentumEl.textContent = momentum;
+                momentumEl.className = `summary-value momentum ${momentum}`;
+            }
+            
+            // Update volatility indicator
+            const volatilityEl = document.getElementById('volatility-indicator');
+            if (volatilityEl) {
+                volatilityEl.textContent = volatility;
+                volatilityEl.className = `summary-value volatility ${volatility}`;
+            }
+        } catch (error) {
+            console.error('Error updating quick analysis:', error);
+        }
+    }
+
+    // Calculate trend direction
+    calculateTrend(prices) {
+        if (prices.length < 10) return 'neutral';
+        
+        const recentPrices = prices.slice(-10);
+        const firstHalf = recentPrices.slice(0, 5);
+        const secondHalf = recentPrices.slice(5);
+        
+        const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+        const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+        
+        const trendStrength = Math.abs(secondAvg - firstAvg) / firstAvg;
+        
+        if (trendStrength < 0.02) return 'neutral';
+        return secondAvg > firstAvg ? 'bullish' : 'bearish';
+    }
+
+    // Calculate momentum from technical data
+    calculateMomentum(technicalData) {
+        if (!technicalData?.rsi?.current) return 'neutral';
+        
+        const rsi = technicalData.rsi.current;
+        if (rsi > 70) return 'strong';
+        if (rsi < 30) return 'weak';
+        return 'neutral';
+    }
+
+    // Calculate volatility level
+    calculateVolatilityLevel(prices) {
+        if (prices.length < 20) return 'medium';
+        
+        const returns = [];
+        for (let i = 1; i < prices.length; i++) {
+            returns.push((prices[i] - prices[i-1]) / prices[i-1]);
+        }
+        
+        const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+        const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / returns.length;
+        const volatility = Math.sqrt(variance) * Math.sqrt(252); // Annualized
+        
+        if (volatility > 0.3) return 'high';
+        if (volatility < 0.15) return 'low';
+        return 'medium';
     }
 
     // Update analysis metrics with comprehensive financial analysis
@@ -734,7 +1122,9 @@ class ChartManager {
             container.innerHTML = `
                 <div class="chart-error">
                     <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Chart Error</h3>
                     <p>${message}</p>
+                    <small>Please try refreshing the data or selecting a different symbol.</small>
                 </div>
             `;
         }
@@ -773,6 +1163,34 @@ class ChartManager {
         this.charts.forEach((chart, id) => {
             Plotly.Plots.resize(id);
         });
+    }
+
+    // Add chart animations and enhancements
+    addChartAnimations(containerId) {
+        const container = document.getElementById(containerId);
+        if (container) {
+            // Add fade-in animation
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(20px)';
+            container.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            
+            // Trigger animation
+            setTimeout(() => {
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 100);
+            
+            // Add hover effects for chart containers
+            container.addEventListener('mouseenter', () => {
+                container.style.transform = 'translateY(-2px)';
+                container.style.boxShadow = '0 12px 35px rgba(0, 0, 0, 0.3)';
+            });
+            
+            container.addEventListener('mouseleave', () => {
+                container.style.transform = 'translateY(0)';
+                container.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.2)';
+            });
+        }
     }
 }
 
