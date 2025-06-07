@@ -1150,13 +1150,13 @@ if __name__ == '__main__':
         print("Created web directory. Please ensure your HTML, CSS, and JS files are placed there.")
     
     print("Starting FinanceScope Web Server...")
-    print("Dashboard will be available at: http://localhost:5000")
-    print("API endpoints available at: http://localhost:5000/api/")
+    print("Dashboard will be available at: http://localhost:8080")
+    print("API endpoints available at: http://localhost:8080/api/")
     
     # Run the Flask application
     app.run(
         host='0.0.0.0',
-        port=5000,
+        port=8080,
         debug=True,
         threaded=True
     ) 
