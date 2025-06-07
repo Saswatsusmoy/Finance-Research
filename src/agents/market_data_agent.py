@@ -100,10 +100,10 @@ class MarketDataAgent(BaseAgent):
         self.update_status("idle")
         return response
     
-    async def fetch_market_data(self, symbol: str, start_date: str = None, end_date: str = None, interval: str = "1d") -> Dict[str, Any]:
+    async def fetch_market_data(self, symbol: str, start_date: str = None, end_date: str = None, interval: str = "1d", market: str = "US") -> Dict[str, Any]:
         """Fetch market data for a given symbol"""
         # Check if data is in cache and still valid
-        cache_key = f"{symbol}_{start_date}_{end_date}_{interval}"
+        cache_key = f"{symbol}_{start_date}_{end_date}_{interval}_{market}"
         
         if (cache_key in self.state.cached_data and 
             self.state.last_cache_update and 
@@ -112,8 +112,16 @@ class MarketDataAgent(BaseAgent):
         
         # If not in cache or expired, fetch new data
         try:
-            # Use yfinance to fetch data
-            ticker = yf.Ticker(symbol)
+            # Try multiple symbol formats for better success rate
+            yahoo_symbol, info = await self._try_multiple_symbol_formats(symbol, market)
+            
+            if not yahoo_symbol or not info:
+                # Fallback to simple transformation
+                yahoo_symbol = self._transform_symbol_for_yahoo(symbol, market)
+                ticker = yf.Ticker(yahoo_symbol)
+                info = ticker.info
+            else:
+                ticker = yf.Ticker(yahoo_symbol)
             
             if not start_date:
                 start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
@@ -124,8 +132,12 @@ class MarketDataAgent(BaseAgent):
             # Fetch historical data
             hist = ticker.history(start=start_date, end=end_date, interval=interval)
             
-            # Get additional info
-            info = ticker.info
+            # Check if we got valid historical data
+            if hist.empty:
+                return {
+                    "symbol": symbol, 
+                    "error": f"No historical data available for {symbol} in {market} market"
+                }
             
             # Convert DataFrame to dict for JSON serialization
             hist_dict = hist.reset_index().to_dict(orient="records")
@@ -154,19 +166,36 @@ class MarketDataAgent(BaseAgent):
             self.logger.error(f"Error fetching market data for {symbol}: {str(e)}")
             return {"symbol": symbol, "error": str(e)}
     
-    async def get_latest_price(self, symbol: str) -> Dict[str, Any]:
+    async def get_latest_price(self, symbol: str, market: str = "US") -> Dict[str, Any]:
         """Get the latest price for a symbol"""
         try:
-            ticker = yf.Ticker(symbol)
-            info = ticker.info
+            # Try multiple symbol formats for better success rate
+            yahoo_symbol, info = await self._try_multiple_symbol_formats(symbol, market)
+            
+            if not yahoo_symbol or not info:
+                # Fallback to simple transformation
+                yahoo_symbol = self._transform_symbol_for_yahoo(symbol, market)
+                ticker = yf.Ticker(yahoo_symbol)
+                info = ticker.info
+            
+            # Check if we have valid price data
+            current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+            if current_price is None:
+                return {
+                    "symbol": symbol, 
+                    "error": f"No price data available for {symbol} in {market} market"
+                }
             
             result = {
                 "symbol": symbol,
-                "company_name": info.get("shortName", ""),
-                "current_price": info.get("currentPrice", info.get("regularMarketPrice", None)),
+                "company_name": info.get("shortName", info.get("longName", "")),
+                "current_price": current_price,
                 "change": info.get("regularMarketChange", None),
                 "change_percent": info.get("regularMarketChangePercent", None),
                 "volume": info.get("regularMarketVolume", None),
+                "market_cap": info.get("marketCap", None),
+                "currency": info.get("currency", "USD" if market == "US" else "INR"),
+                "exchange": info.get("exchange", ""),
                 "timestamp": datetime.now().isoformat()
             }
             
@@ -189,4 +218,56 @@ class MarketDataAgent(BaseAgent):
     def clear_cache(self):
         """Clear the agent's data cache"""
         self.state.cached_data = {}
-        self.state.last_cache_update = None 
+        self.state.last_cache_update = None
+    
+    def _transform_symbol_for_yahoo(self, symbol: str, market: str = 'US') -> str:
+        """Transform symbol for Yahoo Finance API based on market"""
+        # List of known Indian stock symbols that need .NS suffix
+        indian_stocks = {
+            'RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK', 'HINDUNILVR', 
+            'ITC', 'SBIN', 'BHARTIARTL', 'KOTAKBANK', 'LT', 'ASIANPAINT', 
+            'MARUTI', 'TITAN', 'WIPRO', 'AXISBANK', 'BAJFINANCE', 'HCLTECH', 
+            'TECHM', 'ADANIPORTS', 'ONGC', 'NESTLEIND', 'BRITANNIA', 'M&M', 
+            'TATAMOTORS', 'BAJAJ-AUTO', 'ULTRACEMCO', 'SUNPHARMA', 'DRREDDY', 
+            'TATASTEEL', 'HINDALCO', 'POWERGRID', 'NTPC', 'COALINDIA',
+            'JSWSTEEL', 'GRASIM', 'CIPLA', 'DIVISLAB', 'EICHERMOT',
+            'HEROMOTOCO', 'BAJAJFINSV', 'SHREECEM', 'INDUSINDBK', 'BPCL'
+        }
+        
+        # If market is Indian or symbol is in Indian stocks list, add .NS suffix
+        if (market == 'IN' or symbol.upper() in indian_stocks) and '.' not in symbol:
+            return f"{symbol.upper()}.NS"
+        
+        # For US stocks or already formatted symbols, return as is
+        return symbol.upper()
+    
+    async def _try_multiple_symbol_formats(self, symbol: str, market: str = 'US'):
+        """Try multiple symbol formats for better data retrieval"""
+        formats_to_try = []
+        
+        if market == 'IN':
+            # For Indian market, try multiple formats
+            formats_to_try = [
+                f"{symbol.upper()}.NS",  # NSE format
+                f"{symbol.upper()}.BO",  # BSE format
+                symbol.upper()           # Raw symbol
+            ]
+        else:
+            # For US market
+            formats_to_try = [symbol.upper()]
+        
+        for format_symbol in formats_to_try:
+            try:
+                ticker = yf.Ticker(format_symbol)
+                info = ticker.info
+                
+                # Check if we got valid data
+                if info and (info.get('currentPrice') or info.get('regularMarketPrice')):
+                    return format_symbol, info
+                    
+            except Exception as e:
+                self.logger.debug(f"Failed to fetch data for {format_symbol}: {e}")
+                continue
+        
+        # If all formats failed, return None
+        return None, None 

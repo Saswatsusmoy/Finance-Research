@@ -28,6 +28,8 @@ class StockData:
     market_cap: Optional[str]
     day_range: Dict[str, float]
     week_52_range: Dict[str, float]
+    market: Optional[str] = 'US'
+    currency: Optional[str] = 'USD'
 
 class AIAnalysisAgent:
     """AI-powered analysis agent using OpenAI API for natural language insights"""
@@ -118,18 +120,26 @@ class AIAnalysisAgent:
         macd_signal = self._get_macd_signal(technical_indicators.macd)
         bb_position = self._get_bollinger_position(stock_data.current_price, technical_indicators.bollinger_bands)
         
+        # Determine currency symbol and market context
+        currency_symbol = '₹' if stock_data.currency == 'INR' else '$'
+        market_name = 'Indian' if stock_data.market == 'IN' else 'US'
+        market_context = self._get_market_context(stock_data.market)
+        
         prompt = f"""
-You are a CFA-level quantitative analyst with expertise in technical analysis, market microstructure, and behavioral finance. Conduct a comprehensive technical and fundamental analysis of {stock_data.symbol} using advanced analytical frameworks.
+You are a CFA-level quantitative analyst with expertise in technical analysis, market microstructure, and behavioral finance. Conduct a comprehensive technical and fundamental analysis of {stock_data.symbol} in the {market_name} market using advanced analytical frameworks.
 
 === MARKET DATA ANALYSIS ===
+Market: {market_name} ({stock_data.market})
 Symbol: {stock_data.symbol}
-Current Price: ${stock_data.current_price:.2f}
+Current Price: {currency_symbol}{stock_data.current_price:.2f}
 Intraday Change: {stock_data.price_change:+.2f} ({stock_data.price_change_percent:+.2f}%)
-Daily Range: ${stock_data.day_range['low']:.2f} - ${stock_data.day_range['high']:.2f}
-52-Week Range: ${stock_data.week_52_range['low']:.2f} - ${stock_data.week_52_range['high']:.2f}
+Daily Range: {currency_symbol}{stock_data.day_range['low']:.2f} - {currency_symbol}{stock_data.day_range['high']:.2f}
+52-Week Range: {currency_symbol}{stock_data.week_52_range['low']:.2f} - {currency_symbol}{stock_data.week_52_range['high']:.2f}
 52W Position: {price_position_52w:.1f}% (0%=52W Low, 100%=52W High)
 Market Capitalization: {stock_data.market_cap or 'N/A'}
 Analysis Period: {time_period}
+
+{market_context}
 
 === TECHNICAL INDICATOR MATRIX ===
 
@@ -143,14 +153,14 @@ TREND FOLLOWING INDICATORS:
 - MACD Signal: {technical_indicators.macd.get('signal', 0):.4f}
 - MACD Histogram: {technical_indicators.macd.get('histogram', 0):.4f}
 - MACD Signal: {macd_signal}
-- SMA(20): ${technical_indicators.moving_averages.get('sma20', 0):.2f}
-- SMA(50): ${technical_indicators.moving_averages.get('sma50', 0):.2f}
+- SMA(20): {currency_symbol}{technical_indicators.moving_averages.get('sma20', 0):.2f}
+- SMA(50): {currency_symbol}{technical_indicators.moving_averages.get('sma50', 0):.2f}
 - MA Cross Analysis: Price vs SMA20 vs SMA50 positioning
 
 VOLATILITY & MEAN REVERSION:
-- Bollinger Upper: ${technical_indicators.bollinger_bands.get('upper', 0):.2f}
-- Bollinger Middle: ${technical_indicators.bollinger_bands.get('middle', 0):.2f}
-- Bollinger Lower: ${technical_indicators.bollinger_bands.get('lower', 0):.2f}
+- Bollinger Upper: {currency_symbol}{technical_indicators.bollinger_bands.get('upper', 0):.2f}
+- Bollinger Middle: {currency_symbol}{technical_indicators.bollinger_bands.get('middle', 0):.2f}
+- Bollinger Lower: {currency_symbol}{technical_indicators.bollinger_bands.get('lower', 0):.2f}
 - BB Position: {bb_position}
 - Volatility Regime: Analyze band width and price position
 
@@ -161,8 +171,8 @@ VOLUME MICROSTRUCTURE:
 - Volume-Price Relationship: Analyze accumulation/distribution patterns
 
 SUPPORT & RESISTANCE FRAMEWORK:
-- Key Support: ${technical_indicators.support_resistance.get('support', 0):.2f}
-- Key Resistance: ${technical_indicators.support_resistance.get('resistance', 0):.2f}
+- Key Support: {currency_symbol}{technical_indicators.support_resistance.get('support', 0):.2f}
+- Key Resistance: {currency_symbol}{technical_indicators.support_resistance.get('resistance', 0):.2f}
 - S/R Strength: Evaluate historical test frequency and reaction strength
 
 === ANALYTICAL FRAMEWORK REQUIREMENTS ===
@@ -201,7 +211,7 @@ Provide analysis in the following JSON structure with highly technical, actionab
     "support_resistance": "Technical 2-3 sentence analysis of key levels including historical significance, test frequency, volume at levels, and breakout/breakdown probabilities",
     "risk_assessment": "Quantitative 2-3 sentence risk analysis including volatility assessment, maximum adverse excursion potential, and risk-reward ratios with specific percentages",
     "short_term_outlook": "Tactical 2-3 sentence outlook for next 1-2 weeks including specific price targets, probability assessments, and catalyst dependencies",
-    "key_levels": "Precise numerical levels with context: 'Critical resistance at $X.XX (previous high, 61.8% Fib), Strong support at $Y.YY (200-day MA confluence)'",
+    "key_levels": "Precise numerical levels with context using appropriate currency symbol: 'Critical resistance at [currency]X.XX (previous high, 61.8% Fib), Strong support at [currency]Y.YY (200-day MA confluence)'",
     "trading_suggestion": "Detailed tactical trading framework including entry/exit criteria, position sizing recommendations, stop-loss levels, and profit targets with specific risk management parameters"
 }}
 
@@ -286,6 +296,9 @@ IMPORTANT: This analysis is for educational and research purposes only. Include 
     ) -> Dict[str, str]:
         """Provide detailed technical fallback analysis when AI is not available"""
         
+        # Determine currency symbol
+        currency_symbol = '₹' if stock_data.currency == 'INR' else '$'
+        
         # Advanced sentiment calculation with confidence scoring
         sentiment_score = 0
         confidence_factors = []
@@ -353,10 +366,10 @@ IMPORTANT: This analysis is for educational and research purposes only. Include 
         intraday_range = ((stock_data.current_price - stock_data.day_range['low']) / 
                          (stock_data.day_range['high'] - stock_data.day_range['low'])) * 100
         
-        price_analysis = (f"{stock_data.symbol} closed {price_direction} at ${stock_data.current_price:.2f} "
+        price_analysis = (f"{stock_data.symbol} closed {price_direction} at {currency_symbol}{stock_data.current_price:.2f} "
                          f"({stock_data.price_change_percent:+.2f}%), positioned at {intraday_range:.1f}% of today's range. "
                          f"The stock trades at {week_52_position:.1f}% of its 52-week range "
-                         f"(${stock_data.week_52_range['low']:.2f}-${stock_data.week_52_range['high']:.2f}). "
+                         f"({currency_symbol}{stock_data.week_52_range['low']:.2f}-{currency_symbol}{stock_data.week_52_range['high']:.2f}). "
                          f"Current price is {((stock_data.current_price/sma20-1)*100):+.1f}% vs 20-day MA.")
         
         # Enhanced technical summary
@@ -386,11 +399,11 @@ IMPORTANT: This analysis is for educational and research purposes only. Include 
         support_distance = ((stock_data.current_price - support) / stock_data.current_price) * 100
         resistance_distance = ((resistance - stock_data.current_price) / stock_data.current_price) * 100
         
-        support_resistance = (f"Technical support identified at ${support:.2f} ({support_distance:.1f}% below current), "
-                             f"with resistance at ${resistance:.2f} ({resistance_distance:.1f}% above current). "
+        support_resistance = (f"Technical support identified at {currency_symbol}{support:.2f} ({support_distance:.1f}% below current), "
+                             f"with resistance at {currency_symbol}{resistance:.2f} ({resistance_distance:.1f}% above current). "
                              f"Risk-reward ratio for long positions: {resistance_distance/support_distance:.2f}:1. "
-                             f"Key breakout level above ${resistance:.2f} could target {resistance * 1.05:.2f}, "
-                             f"while breakdown below ${support:.2f} may test {support * 0.95:.2f}.")
+                             f"Key breakout level above {currency_symbol}{resistance:.2f} could target {currency_symbol}{resistance * 1.05:.2f}, "
+                             f"while breakdown below {currency_symbol}{support:.2f} may test {currency_symbol}{support * 0.95:.2f}.")
         
         # Enhanced risk assessment
         volatility_estimate = abs(stock_data.price_change_percent) * 1.5  # Rough daily volatility
@@ -415,15 +428,15 @@ IMPORTANT: This analysis is for educational and research purposes only. Include 
         fib_618 = stock_data.week_52_range['low'] + (stock_data.week_52_range['high'] - stock_data.week_52_range['low']) * 0.618
         fib_382 = stock_data.week_52_range['low'] + (stock_data.week_52_range['high'] - stock_data.week_52_range['low']) * 0.382
         
-        key_levels = (f"Critical resistance: ${resistance:.2f} (technical), ${fib_618:.2f} (61.8% Fib retracement). "
-                     f"Strong support: ${support:.2f} (technical), ${fib_382:.2f} (38.2% Fib), ${sma20:.2f} (20-day MA). "
-                     f"Breakout targets: ${resistance * 1.05:.2f} (5% extension), ${stock_data.week_52_range['high']:.2f} (52W high). "
-                     f"Breakdown targets: ${support * 0.95:.2f} (5% extension), ${stock_data.week_52_range['low']:.2f} (52W low).")
+        key_levels = (f"Critical resistance: {currency_symbol}{resistance:.2f} (technical), {currency_symbol}{fib_618:.2f} (61.8% Fib retracement). "
+                     f"Strong support: {currency_symbol}{support:.2f} (technical), {currency_symbol}{fib_382:.2f} (38.2% Fib), {currency_symbol}{sma20:.2f} (20-day MA). "
+                     f"Breakout targets: {currency_symbol}{resistance * 1.05:.2f} (5% extension), {currency_symbol}{stock_data.week_52_range['high']:.2f} (52W high). "
+                     f"Breakdown targets: {currency_symbol}{support * 0.95:.2f} (5% extension), {currency_symbol}{stock_data.week_52_range['low']:.2f} (52W low).")
         
         # Enhanced trading suggestion
-        entry_criteria = f"above ${resistance:.2f}" if sentiment_score > 0 else f"below ${support:.2f}"
-        stop_loss = f"${support * 0.98:.2f}" if sentiment_score > 0 else f"${resistance * 1.02:.2f}"
-        profit_target = f"${resistance * 1.08:.2f}" if sentiment_score > 0 else f"${support * 0.92:.2f}"
+        entry_criteria = f"above {currency_symbol}{resistance:.2f}" if sentiment_score > 0 else f"below {currency_symbol}{support:.2f}"
+        stop_loss = f"{currency_symbol}{support * 0.98:.2f}" if sentiment_score > 0 else f"{currency_symbol}{resistance * 1.02:.2f}"
+        profit_target = f"{currency_symbol}{resistance * 1.08:.2f}" if sentiment_score > 0 else f"{currency_symbol}{support * 0.92:.2f}"
         position_size = "1-2%" if abs(sentiment_score) >= 2 else "0.5-1%"
         
         trading_suggestion = (f"Educational framework: {'Long' if sentiment_score > 0 else 'Short'} bias with entry {entry_criteria}. "
@@ -600,6 +613,55 @@ Maintain institutional-grade analytical standards with specific numerical target
             return f"Lower Half ({bb_position:.1f}% to middle) - Bearish bias"
         else:
             return "Below Lower Band - Potential oversold, watch for bounce"
+
+    def _get_market_context(self, market: str) -> str:
+        """Get market-specific context and considerations"""
+        if market == 'IN':
+            return """
+=== INDIAN MARKET CONTEXT ===
+Market Hours: 9:15 AM - 3:30 PM IST (Monday-Friday)
+Currency: Indian Rupee (INR)
+Primary Exchanges: NSE (National Stock Exchange), BSE (Bombay Stock Exchange)
+Market Characteristics:
+- High retail participation and sentiment-driven moves
+- Significant impact from FII/DII flows
+- Monsoon, policy announcements, and global cues influence
+- Circuit breakers: ±10% for individual stocks, ±10% for indices
+- Settlement: T+2 rolling settlement
+- Key Indices: NIFTY 50, SENSEX, NIFTY Bank
+- Regulatory Body: SEBI (Securities and Exchange Board of India)
+
+INDIAN MARKET CONSIDERATIONS:
+- Factor in rupee volatility against USD
+- Consider sectoral rotation patterns unique to Indian markets
+- Account for quarterly results season impact
+- Evaluate government policy and regulatory changes
+- Assess monsoon impact on agricultural and FMCG sectors
+- Consider festival season effects on consumption stocks
+"""
+        else:
+            return """
+=== US MARKET CONTEXT ===
+Market Hours: 9:30 AM - 4:00 PM EST (Monday-Friday)
+Currency: US Dollar (USD)
+Primary Exchanges: NYSE, NASDAQ
+Market Characteristics:
+- High institutional participation and algorithmic trading
+- Significant impact from Fed policy and economic data
+- Earnings seasons and guidance drive individual stock moves
+- Circuit breakers: 7%, 13%, 20% for market-wide halts
+- Settlement: T+2 for most securities
+- Key Indices: S&P 500, NASDAQ, Dow Jones
+- Regulatory Body: SEC (Securities and Exchange Commission)
+
+US MARKET CONSIDERATIONS:
+- Factor in Federal Reserve policy and interest rate environment
+- Consider sector rotation based on economic cycles
+- Account for earnings season and guidance impacts
+- Evaluate geopolitical events and trade policies
+- Assess inflation data and employment reports
+- Consider options expiration and rebalancing effects
+"""
 
 # Global instance
 ai_analysis_agent = AIAnalysisAgent() 

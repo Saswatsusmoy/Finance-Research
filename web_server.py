@@ -74,7 +74,10 @@ def serve_static(filename):
 def get_market_data(symbol):
     """Get current market data for a symbol"""
     try:
-        cache_key = f"market_{symbol}"
+        # Get market parameter from query string
+        market = request.args.get('market', 'US').upper()
+        
+        cache_key = f"market_{symbol}_{market}"
         cached_data = get_from_cache(cache_key, 60)  # 1 minute cache
         
         if cached_data:
@@ -85,7 +88,7 @@ def get_market_data(symbol):
         asyncio.set_event_loop(loop)
         
         try:
-            data = loop.run_until_complete(market_agent.get_latest_price(symbol))
+            data = loop.run_until_complete(market_agent.get_latest_price(symbol, market))
             
             # Format data for frontend
             formatted_data = {
@@ -121,6 +124,7 @@ def get_batch_market_data():
     """Get market data for multiple symbols"""
     symbols = request.args.get('symbols', '').split(',')
     symbols = [s.strip().upper() for s in symbols if s.strip()]
+    market = request.args.get('market', 'US').upper()
     
     if not symbols:
         return jsonify({'error': 'No symbols provided'}), 400
@@ -130,7 +134,7 @@ def get_batch_market_data():
         
         # Process each symbol
         for symbol in symbols:
-            cache_key = f"market_{symbol}"
+            cache_key = f"market_{symbol}_{market}"
             cached_data = get_from_cache(cache_key, 60)
             
             if cached_data:
@@ -141,7 +145,7 @@ def get_batch_market_data():
                 asyncio.set_event_loop(loop)
                 
                 try:
-                    data = loop.run_until_complete(market_agent.get_latest_price(symbol))
+                    data = loop.run_until_complete(market_agent.get_latest_price(symbol, market))
                     
                     formatted_data = {
                         'symbol': symbol,
@@ -171,9 +175,10 @@ def get_historical_data(symbol):
     """Get historical price data for a symbol"""
     period = request.args.get('period', '1M')
     interval = request.args.get('interval', '1d')
+    market = request.args.get('market', 'US').upper()
     
     try:
-        cache_key = f"historical_{symbol}_{period}_{interval}"
+        cache_key = f"historical_{symbol}_{period}_{interval}_{market}"
         cached_data = get_from_cache(cache_key, 300)  # 5 minute cache
         
         if cached_data:
@@ -196,7 +201,9 @@ def get_historical_data(symbol):
                 market_agent.fetch_market_data(
                     symbol, 
                     start_date.strftime('%Y-%m-%d'),
-                    end_date.strftime('%Y-%m-%d')
+                    end_date.strftime('%Y-%m-%d'),
+                    interval,
+                    market
                 )
             )
             
@@ -1052,7 +1059,9 @@ def get_ai_analysis():
             volume=stock_data_dict.get('volume', 0),
             market_cap=stock_data_dict.get('market_cap'),
             day_range=stock_data_dict.get('day_range', {'low': 0, 'high': 0}),
-            week_52_range=stock_data_dict.get('week_52_range', {'low': 0, 'high': 0})
+            week_52_range=stock_data_dict.get('week_52_range', {'low': 0, 'high': 0}),
+            market=stock_data_dict.get('market', 'US'),
+            currency=stock_data_dict.get('currency', 'USD')
         )
         
         technical_indicators = TechnicalIndicators(
@@ -1105,13 +1114,18 @@ def get_ai_analysis():
             elif price_change_percent < -2:
                 sentiment = 'bearish'
             
+            # Get currency symbol
+            currency = stock_data_dict.get('currency', 'USD')
+            currency_symbol = '₹' if currency == 'INR' else '$'
+            market_name = 'Indian' if stock_data_dict.get('market') == 'IN' else 'US'
+            
             fallback_analysis = {
                 'overall_sentiment': sentiment,
-                'price_analysis': f"Stock is trading at ${stock_data_dict.get('current_price', 0):.2f} with a {abs(price_change_percent):.2f}% {'gain' if price_change_percent > 0 else 'loss'}.",
+                'price_analysis': f"Stock is trading at {currency_symbol}{stock_data_dict.get('current_price', 0):.2f} in the {market_name} market with a {abs(price_change_percent):.2f}% {'gain' if price_change_percent > 0 else 'loss'}.",
                 'technical_summary': f"RSI at {rsi:.1f} indicates {'overbought' if rsi > 70 else 'oversold' if rsi < 30 else 'neutral'} conditions.",
-                'volume_insights': f"Current volume suggests {'heightened' if technical_indicators_dict.get('volume_analysis', {}).get('volume_trend') == 'increasing' else 'normal'} market activity.",
+                'volume_insights': f"Current volume suggests {'heightened' if technical_indicators_dict.get('volume_analysis', {}).get('volume_trend') == 'increasing' else 'normal'} market activity in the {market_name} market.",
                 'support_resistance': f"Key levels identified from recent price action.",
-                'risk_assessment': f"Monitor technical indicators for trend confirmation.",
+                'risk_assessment': f"Monitor technical indicators for trend confirmation in the {market_name} market context.",
                 'short_term_outlook': f"Watch for {sentiment} signals in the near term.",
                 'key_levels': f"Important support and resistance levels to monitor.",
                 'trading_suggestion': f"Educational analysis only - consult financial advisor for investment decisions."

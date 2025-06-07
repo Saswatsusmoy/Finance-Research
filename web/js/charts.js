@@ -141,6 +141,13 @@ class ChartManager {
         }
 
         try {
+            // Get current currency from Analysis module
+            let currentCurrency = 'USD';
+            if (window.Analysis) {
+                currentCurrency = window.Analysis.currentCurrency || 'USD';
+            }
+            const currencySymbol = currentCurrency === 'INR' ? '₹' : '$';
+            
             const traces = [];
             const historicalData = data.data;
 
@@ -163,10 +170,10 @@ class ChartManager {
                 },
                 showlegend: false,
                 hovertemplate: '<b>%{x}</b><br>' +
-                              'Open: $%{open:.2f}<br>' +
-                              'High: $%{high:.2f}<br>' +
-                              'Low: $%{low:.2f}<br>' +
-                              'Close: $%{close:.2f}<extra></extra>'
+                              'Open: %{open:.2f}<br>' +
+                              'High: %{high:.2f}<br>' +
+                              'Low: %{low:.2f}<br>' +
+                              'Close: %{close:.2f}<extra></extra>'
             };
             traces.push(priceTrace);
 
@@ -189,7 +196,7 @@ class ChartManager {
                         shape: 'spline',
                         smoothing: 0.3
                     },
-                    hovertemplate: '<b>SMA 20</b><br>%{x}<br>$%{y:.2f}<extra></extra>'
+                    hovertemplate: `<b>SMA 20</b><br>%{x}<br>${currencySymbol}%{y:.2f}<extra></extra>`
                 });
 
                 // SMA 50 with enhanced styling
@@ -206,7 +213,7 @@ class ChartManager {
                         smoothing: 0.3,
                         dash: 'dash'
                     },
-                    hovertemplate: '<b>SMA 50</b><br>%{x}<br>$%{y:.2f}<extra></extra>'
+                    hovertemplate: `<b>SMA 50</b><br>%{x}<br>${currencySymbol}%{y:.2f}<extra></extra>`
                 });
             }
 
@@ -228,7 +235,7 @@ class ChartManager {
                     },
                     fill: 'tonexty',
                     fillcolor: 'rgba(58, 123, 213, 0.08)',
-                    hovertemplate: '<b>BB Upper</b><br>%{x}<br>$%{y:.2f}<extra></extra>'
+                    hovertemplate: `<b>BB Upper</b><br>%{x}<br>${currencySymbol}%{y:.2f}<extra></extra>`
                 });
 
                 // Lower band
@@ -243,7 +250,7 @@ class ChartManager {
                         width: 1.5, 
                         dash: 'dot' 
                     },
-                    hovertemplate: '<b>BB Lower</b><br>%{x}<br>$%{y:.2f}<extra></extra>'
+                    hovertemplate: `<b>BB Lower</b><br>%{x}<br>${currencySymbol}%{y:.2f}<extra></extra>`
                 });
             }
 
@@ -268,12 +275,12 @@ class ChartManager {
                         shape: 'spline',
                         smoothing: 0.2
                     },
-                    hovertemplate: '<b>VWAP</b><br>%{x}<br>$%{y:.2f}<extra></extra>'
+                    hovertemplate: `<b>VWAP</b><br>%{x}<br>${currencySymbol}%{y:.2f}<extra></extra>`
                 });
             }
 
             const layout = this.getEnhancedLayout(`${symbol} Price Analysis`, 450);
-            layout.yaxis.title = 'Price ($)';
+            layout.yaxis.title = `Price (${currencySymbol})`;
 
             await Plotly.newPlot('analysis-chart', traces, layout, this.chartConfig);
             this.charts.set('analysis-chart', { traces, layout });
@@ -391,7 +398,7 @@ class ChartManager {
 
         try {
             const historicalData = data.data;
-            
+
             // Color code volume bars based on price movement
             const volumeColors = historicalData.map(d => {
                 return d.close >= d.open ? 
@@ -404,7 +411,7 @@ class ChartManager {
                 y: historicalData.map(d => d.volume),
                 type: 'bar',
                 name: 'Volume',
-                marker: { 
+                marker: {
                     color: volumeColors,
                     line: { width: 0 }
                 },
@@ -507,7 +514,7 @@ class ChartManager {
                     }
                 }
 
-                traces.push({
+            traces.push({
                     x: histogramDates,
                     y: histogramValues,
                     type: 'bar',
@@ -721,6 +728,15 @@ class ChartManager {
             const change = currentData.close - previousData.close;
             const changePercent = (change / previousData.close) * 100;
 
+            // Get current market and currency from Analysis module
+            let currentCurrency = 'USD';
+            let selectedMarket = 'US';
+            
+            if (window.Analysis) {
+                currentCurrency = window.Analysis.currentCurrency || 'USD';
+                selectedMarket = window.Analysis.selectedMarket || 'US';
+            }
+
             // Calculate ranges
             const dayHigh = currentData.high;
             const dayLow = currentData.low;
@@ -731,18 +747,32 @@ class ChartManager {
             const currentVolume = currentData.volume;
 
             // Update stock overview elements
-            document.getElementById('current-symbol').textContent = symbol.toUpperCase();
+            const symbolElement = document.getElementById('current-symbol');
+            symbolElement.textContent = symbol.toUpperCase();
+            
+            // Add exchange badge for Indian stocks
+            const existingBadge = symbolElement.querySelector('.exchange-badge');
+            if (existingBadge) existingBadge.remove();
+            
+            if (selectedMarket === 'IN') {
+                const exchangeBadge = document.createElement('span');
+                exchangeBadge.className = 'exchange-badge nse';
+                exchangeBadge.textContent = 'NSE';
+                symbolElement.appendChild(exchangeBadge);
+            }
+            
             document.getElementById('current-stock-name').textContent = this.getCompanyName(symbol);
-            document.getElementById('current-price').textContent = Utils.formatCurrency(currentData.close);
+            
+            document.getElementById('current-price').textContent = Utils.formatCurrency(currentData.close, 2, currentCurrency);
             
             const priceChangeEl = document.getElementById('price-change');
-            priceChangeEl.textContent = `${change >= 0 ? '+' : ''}${Utils.formatCurrency(change)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`;
+            priceChangeEl.textContent = `${change >= 0 ? '+' : ''}${Utils.formatCurrency(change, 2, currentCurrency)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`;
             priceChangeEl.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
 
-            document.getElementById('day-range').textContent = `${Utils.formatCurrency(dayLow)} - ${Utils.formatCurrency(dayHigh)}`;
-            document.getElementById('week-range').textContent = `${Utils.formatCurrency(low52w)} - ${Utils.formatCurrency(high52w)}`;
+            document.getElementById('day-range').textContent = `${Utils.formatCurrency(dayLow, 2, currentCurrency)} - ${Utils.formatCurrency(dayHigh, 2, currentCurrency)}`;
+            document.getElementById('week-range').textContent = `${Utils.formatCurrency(low52w, 2, currentCurrency)} - ${Utils.formatCurrency(high52w, 2, currentCurrency)}`;
             document.getElementById('current-volume').textContent = Utils.formatVolume(currentVolume);
-            document.getElementById('market-cap').textContent = this.calculateMarketCap(currentData.close);
+            document.getElementById('market-cap').textContent = this.calculateMarketCap(currentData.close, currentCurrency);
         } catch (error) {
             console.error('Error updating stock overview:', error);
         }
@@ -751,6 +781,7 @@ class ChartManager {
     // Get company name (simplified mapping)
     getCompanyName(symbol) {
         const companyNames = {
+            // US Companies
             'AAPL': 'Apple Inc.',
             'GOOGL': 'Alphabet Inc.',
             'MSFT': 'Microsoft Corporation',
@@ -761,25 +792,51 @@ class ChartManager {
             'NFLX': 'Netflix Inc.',
             'SPY': 'SPDR S&P 500 ETF',
             'QQQ': 'Invesco QQQ Trust',
-            'IWM': 'iShares Russell 2000 ETF'
+            'IWM': 'iShares Russell 2000 ETF',
+            'JPM': 'JPMorgan Chase & Co',
+            'JNJ': 'Johnson & Johnson',
+            'V': 'Visa Inc',
+            'PG': 'Procter & Gamble Co',
+            'UNH': 'UnitedHealth Group Inc',
+            'HD': 'Home Depot Inc',
+            'MA': 'Mastercard Inc',
+            
+            // Indian Companies
+            'RELIANCE': 'Reliance Industries Ltd',
+            'TCS': 'Tata Consultancy Services',
+            'HDFCBANK': 'HDFC Bank Ltd',
+            'INFY': 'Infosys Ltd',
+            'ICICIBANK': 'ICICI Bank Ltd',
+            'HINDUNILVR': 'Hindustan Unilever Ltd',
+            'ITC': 'ITC Ltd',
+            'SBIN': 'State Bank of India',
+            'BHARTIARTL': 'Bharti Airtel Ltd',
+            'KOTAKBANK': 'Kotak Mahindra Bank',
+            'LT': 'Larsen & Toubro Ltd',
+            'ASIANPAINT': 'Asian Paints Ltd',
+            'MARUTI': 'Maruti Suzuki India Ltd',
+            'TITAN': 'Titan Company Ltd',
+            'WIPRO': 'Wipro Ltd'
         };
         return companyNames[symbol.toUpperCase()] || `${symbol.toUpperCase()} Corporation`;
     }
 
     // Calculate market cap (simplified)
-    calculateMarketCap(price) {
+    calculateMarketCap(price, currency = 'USD') {
         // This is a simplified calculation - in reality you'd need shares outstanding
         const estimatedShares = 1000000000; // 1B shares as example
         const marketCap = price * estimatedShares;
         
+        const currencySymbol = currency === 'INR' ? '₹' : '$';
+        
         if (marketCap >= 1e12) {
-            return `$${(marketCap / 1e12).toFixed(2)}T`;
+            return `${currencySymbol}${(marketCap / 1e12).toFixed(2)}T`;
         } else if (marketCap >= 1e9) {
-            return `$${(marketCap / 1e9).toFixed(2)}B`;
+            return `${currencySymbol}${(marketCap / 1e9).toFixed(2)}B`;
         } else if (marketCap >= 1e6) {
-            return `$${(marketCap / 1e6).toFixed(2)}M`;
+            return `${currencySymbol}${(marketCap / 1e6).toFixed(2)}M`;
         }
-        return `$${marketCap.toFixed(0)}`;
+        return `${currencySymbol}${marketCap.toFixed(0)}`;
     }
 
     // Update quick analysis
@@ -873,6 +930,14 @@ class ChartManager {
         if (!metricsContainer) return;
 
         try {
+            // Get current market and currency from Analysis module
+            let currentCurrency = 'USD';
+            let selectedMarket = 'US';
+            
+            if (window.Analysis) {
+                currentCurrency = window.Analysis.currentCurrency || 'USD';
+                selectedMarket = window.Analysis.selectedMarket || 'US';
+            }
             const currentData = data.data[data.data.length - 1];
             const previousData = data.data[data.data.length - 2];
             const closes = data.data.map(d => d.close);
@@ -926,23 +991,23 @@ class ChartManager {
 
             const metrics = [
                 // Price Information
-                { label: 'Current Price', value: Utils.formatCurrency(currentData.close), category: 'price' },
-                { label: 'Daily Change', value: `${change >= 0 ? '+' : ''}${Utils.formatCurrency(change)}`, class: Utils.getChangeClass(change), category: 'price' },
+                { label: 'Current Price', value: Utils.formatCurrency(currentData.close, 2, currentCurrency), category: 'price' },
+                { label: 'Daily Change', value: `${change >= 0 ? '+' : ''}${Utils.formatCurrency(change, 2, currentCurrency)}`, class: Utils.getChangeClass(change), category: 'price' },
                 { label: 'Daily Change %', value: `${change >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`, class: Utils.getChangeClass(change), category: 'price' },
-                { label: '52W High', value: Utils.formatCurrency(high52Week), category: 'price' },
-                { label: '52W Low', value: Utils.formatCurrency(low52Week), category: 'price' },
+                { label: '52W High', value: Utils.formatCurrency(high52Week, 2, currentCurrency), category: 'price' },
+                { label: '52W Low', value: Utils.formatCurrency(low52Week, 2, currentCurrency), category: 'price' },
                 { label: 'Distance from High', value: `${priceFromHigh.toFixed(1)}%`, class: priceFromHigh > 20 ? 'negative' : 'neutral', category: 'price' },
                 
                 // Volume Analysis
                 { label: 'Volume', value: Utils.formatVolume(volume), category: 'volume' },
                 { label: 'Avg Volume', value: Utils.formatVolume(avgVolume), category: 'volume' },
                 { label: 'Volume Ratio', value: `${volumeRatio.toFixed(2)}x`, class: volumeRatio > 1.5 ? 'positive' : volumeRatio < 0.5 ? 'negative' : 'neutral', category: 'volume' },
-                { label: 'VWAP', value: Utils.formatCurrency(vwap), class: currentData.close > vwap ? 'positive' : 'negative', category: 'volume' },
+                { label: 'VWAP', value: Utils.formatCurrency(vwap, 2, currentCurrency), class: currentData.close > vwap ? 'positive' : 'negative', category: 'volume' },
                 
                 // Risk Metrics
                 { label: 'Volatility (Ann.)', value: `${volatility.toFixed(2)}%`, class: volatility > 30 ? 'negative' : volatility < 15 ? 'positive' : 'neutral', category: 'risk' },
                 { label: 'Max Drawdown', value: `${drawdown.maxDrawdown.toFixed(2)}%`, class: 'negative', category: 'risk' },
-                { label: 'ATR', value: Utils.formatCurrency(currentATR), category: 'risk' },
+                { label: 'ATR', value: Utils.formatCurrency(currentATR, 2, currentCurrency), category: 'risk' },
                 
                 // Technical Indicators
                 { label: 'RSI (14)', value: technicalData?.rsi?.current || 'N/A', class: technicalData?.rsi?.current > 70 ? 'negative' : technicalData?.rsi?.current < 30 ? 'positive' : 'neutral', category: 'technical' },
@@ -950,18 +1015,18 @@ class ChartManager {
                 { label: 'CCI (20)', value: currentCCI.toFixed(2), class: currentCCI > 100 ? 'negative' : currentCCI < -100 ? 'positive' : 'neutral', category: 'technical' },
                 
                 // Support/Resistance
-                { label: 'Pivot Point', value: Utils.formatCurrency(pivots.pivot), category: 'levels' },
-                { label: 'Resistance 1', value: Utils.formatCurrency(pivots.r1), category: 'levels' },
-                { label: 'Support 1', value: Utils.formatCurrency(pivots.s1), category: 'levels' },
-                { label: 'Fib 61.8%', value: Utils.formatCurrency(fibonacci.level_618), category: 'levels' },
-                { label: 'Fib 38.2%', value: Utils.formatCurrency(fibonacci.level_382), category: 'levels' }
+                { label: 'Pivot Point', value: Utils.formatCurrency(pivots.pivot, 2, currentCurrency), category: 'levels' },
+                { label: 'Resistance 1', value: Utils.formatCurrency(pivots.r1, 2, currentCurrency), category: 'levels' },
+                { label: 'Support 1', value: Utils.formatCurrency(pivots.s1, 2, currentCurrency), category: 'levels' },
+                { label: 'Fib 61.8%', value: Utils.formatCurrency(fibonacci.level_618, 2, currentCurrency), category: 'levels' },
+                { label: 'Fib 38.2%', value: Utils.formatCurrency(fibonacci.level_382, 2, currentCurrency), category: 'levels' }
             ];
 
             // Add moving averages if available
             if (technicalData?.sma) {
                 metrics.push(
-                    { label: 'SMA 20', value: Utils.formatCurrency(technicalData.sma.sma20), class: currentData.close > technicalData.sma.sma20 ? 'positive' : 'negative', category: 'technical' },
-                    { label: 'SMA 50', value: Utils.formatCurrency(technicalData.sma.sma50), class: currentData.close > technicalData.sma.sma50 ? 'positive' : 'negative', category: 'technical' }
+                    { label: 'SMA 20', value: Utils.formatCurrency(technicalData.sma.sma20, 2, currentCurrency), class: currentData.close > technicalData.sma.sma20 ? 'positive' : 'negative', category: 'technical' },
+                    { label: 'SMA 50', value: Utils.formatCurrency(technicalData.sma.sma50, 2, currentCurrency), class: currentData.close > technicalData.sma.sma50 ? 'positive' : 'negative', category: 'technical' }
                 );
             }
 
@@ -1053,6 +1118,12 @@ class ChartManager {
         if (!chartContainer) return;
 
         try {
+            // Get current currency from Analysis module
+            let currentCurrency = 'USD';
+            if (window.Analysis) {
+                currentCurrency = window.Analysis.currentCurrency || 'USD';
+            }
+            const currencySymbol = currentCurrency === 'INR' ? '₹' : '$';
             const trace = {
                 x: data.map(d => d.date),
                 y: data.map(d => d.close),
@@ -1077,7 +1148,7 @@ class ChartManager {
                     gridcolor: this.defaultColors.grid,
                     showgrid: true,
                     color: this.defaultColors.text,
-                    title: 'Price ($)'
+                    title: `Price (${currencySymbol})`
                 },
                 margin: { t: 20, r: 20, b: 40, l: 60 },
                 height: 400,

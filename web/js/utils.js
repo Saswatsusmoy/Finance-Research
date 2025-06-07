@@ -5,14 +5,49 @@
 
 const Utils = {
     // Formatting functions
-    formatCurrency: function(value, decimals = 2) {
-        if (isNaN(value)) return '$0.00';
+    formatCurrency: function(value, decimals = 2, currency = 'USD') {
+        if (isNaN(value)) return currency === 'INR' ? '₹0.00' : '$0.00';
+        
+        if (currency === 'INR') {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            }).format(value);
+        }
+        
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
             minimumFractionDigits: decimals,
             maximumFractionDigits: decimals
         }).format(value);
+    },
+
+    formatCurrencyINR: function(value, decimals = 2) {
+        if (isNaN(value)) return '₹0.00';
+        
+        // Indian number formatting with lakhs and crores
+        const absValue = Math.abs(value);
+        let formattedValue;
+        
+        if (absValue >= 10000000) { // 1 crore
+            formattedValue = `₹${(value / 10000000).toFixed(2)} Cr`;
+        } else if (absValue >= 100000) { // 1 lakh
+            formattedValue = `₹${(value / 100000).toFixed(2)} L`;
+        } else if (absValue >= 1000) { // 1 thousand
+            formattedValue = `₹${(value / 1000).toFixed(2)} K`;
+        } else {
+            formattedValue = new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            }).format(value);
+        }
+        
+        return formattedValue;
     },
 
     formatNumber: function(value, decimals = 2) {
@@ -180,8 +215,20 @@ const Utils = {
     },
 
     // Validation functions
-    isValidSymbol: function(symbol) {
-        return /^[A-Z]{1,5}$/.test(symbol.toUpperCase());
+    isValidSymbol: function(symbol, market = 'US') {
+        if (!symbol || symbol.length === 0) {
+            return false;
+        }
+        
+        const upperSymbol = symbol.toUpperCase();
+        
+        if (market === 'IN') {
+            // Indian stocks: Allow 1-12 characters, letters, numbers, and hyphens
+            return /^[A-Z][A-Z0-9&-]{0,11}$/.test(upperSymbol);
+        } else {
+            // US stocks: Traditional 1-5 letter symbols
+            return /^[A-Z]{1,5}$/.test(upperSymbol);
+        }
     },
 
     isValidEmail: function(email) {
@@ -409,8 +456,20 @@ const Utils = {
         return text.substr(0, maxLength) + '...';
     },
 
-    isValidSymbol: function(symbol) {
-        return symbol && symbol.length > 0 && /^[A-Z]{1,5}$/.test(symbol);
+    isValidSymbol: function(symbol, market = 'US') {
+        if (!symbol || symbol.length === 0) {
+            return false;
+        }
+        
+        const upperSymbol = symbol.toUpperCase();
+        
+        if (market === 'IN') {
+            // Indian stocks: Allow 1-12 characters, letters, numbers, and hyphens
+            return /^[A-Z][A-Z0-9&-]{0,11}$/.test(upperSymbol);
+        } else {
+            // US stocks: Traditional 1-5 letter symbols
+            return /^[A-Z]{1,5}$/.test(upperSymbol);
+        }
     },
 
     // Advanced Technical Analysis Calculations

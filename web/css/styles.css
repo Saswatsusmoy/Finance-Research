@@ -4688,3 +4688,827 @@ body {
         padding: var(--space-md);
     }
 }
+
+/* ==========================================
+   ENHANCED UI & MARKET SELECTOR
+   ========================================== */
+
+.analysis-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    flex-wrap: wrap;
+    padding: var(--space-md);
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.market-selector {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.market-selector::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.market-selector:hover::before {
+    left: 100%;
+}
+
+.market-selector:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 6px 25px rgba(139, 92, 246, 0.15);
+    transform: translateY(-2px);
+}
+
+.market-selector label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.market-select {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+    color: var(--text-primary);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 180px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.market-select:hover {
+    border-color: rgba(139, 92, 246, 0.5);
+    background: linear-gradient(145deg, rgba(139, 92, 246, 0.1) 0%, rgba(30, 41, 59, 0.9) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.market-select:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
+    transform: scale(1.02);
+}
+
+.market-select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: var(--space-sm);
+    font-weight: 500;
+}
+
+/* Enhanced Symbol Search */
+.symbol-search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    flex: 1;
+    max-width: 400px;
+}
+
+.symbol-input-container {
+    position: relative;
+    flex: 1;
+}
+
+.symbol-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 2px solid rgba(148, 163, 184, 0.2);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.symbol-input:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2), 0 4px 12px rgba(139, 92, 246, 0.1);
+    transform: translateY(-1px);
+}
+
+.symbol-input::placeholder {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* Enhanced Symbol Suggestions */
+.symbol-suggestions {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%);
+    border: 2px solid rgba(148, 163, 184, 0.2);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    max-height: 280px;
+    overflow-y: auto;
+    backdrop-filter: blur(20px);
+    display: none;
+}
+
+.symbol-suggestions.show {
+    display: block;
+    animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.suggestion-item {
+    padding: var(--space-md) var(--space-lg);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.suggestion-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #8b5cf6 0%, #ec4899 100%);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.suggestion-item:hover::before {
+    transform: scaleY(1);
+}
+
+.suggestion-item:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.1) 100%);
+    color: var(--text-primary);
+    transform: translateX(8px);
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-main {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.suggestion-symbol {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+}
+
+.suggestion-name {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.suggestion-exchange {
+    font-size: 0.75rem;
+    color: white;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+/* Indian Market Suggestion Styling */
+.indian-market .suggestion-exchange.nse {
+    background: linear-gradient(135deg, var(--saffron) 0%, rgba(255, 153, 51, 0.8) 100%);
+    box-shadow: 0 2px 8px rgba(255, 153, 51, 0.3);
+}
+
+.indian-market .suggestion-exchange.bse {
+    background: linear-gradient(135deg, var(--green) 0%, rgba(19, 136, 8, 0.8) 100%);
+    box-shadow: 0 2px 8px rgba(19, 136, 8, 0.3);
+}
+
+.indian-market .suggestion-item:hover {
+    background: linear-gradient(135deg, rgba(255, 153, 51, 0.15) 0%, rgba(19, 136, 8, 0.1) 100%);
+}
+
+.indian-market .suggestion-item::before {
+    background: linear-gradient(180deg, var(--saffron) 0%, var(--green) 100%);
+}
+
+/* Indian Market Specific Styling */
+.indian-market {
+    --primary-color: #ff6b35;
+    --secondary-color: #138808;
+    --accent-color: #000080;
+    --saffron: #ff9933;
+    --green: #138808;
+    --navy: #000080;
+    --gold: #ffd700;
+}
+
+.indian-market .market-selector {
+    background: linear-gradient(145deg, rgba(255, 153, 51, 0.15) 0%, rgba(19, 136, 8, 0.15) 100%);
+    border: 2px solid rgba(255, 153, 51, 0.4);
+    box-shadow: 0 4px 20px rgba(255, 153, 51, 0.1);
+}
+
+.indian-market .market-selector:hover {
+    border-color: rgba(255, 153, 51, 0.6);
+    box-shadow: 0 6px 25px rgba(255, 153, 51, 0.25);
+    transform: translateY(-1px);
+}
+
+.indian-market .current-price {
+    color: var(--saffron);
+    text-shadow: 0 0 10px rgba(255, 153, 51, 0.3);
+    font-weight: 700;
+}
+
+.indian-market .price-change.positive {
+    color: var(--green);
+    background: linear-gradient(135deg, rgba(19, 136, 8, 0.15) 0%, rgba(19, 136, 8, 0.05) 100%);
+    border: 1px solid rgba(19, 136, 8, 0.2);
+    box-shadow: 0 2px 10px rgba(19, 136, 8, 0.1);
+}
+
+.indian-market .price-change.negative {
+    color: var(--saffron);
+    background: linear-gradient(135deg, rgba(255, 153, 51, 0.15) 0%, rgba(255, 153, 51, 0.05) 100%);
+    border: 1px solid rgba(255, 153, 51, 0.2);
+    box-shadow: 0 2px 10px rgba(255, 153, 51, 0.1);
+}
+
+.indian-market .sentiment-badge.bullish {
+    background: linear-gradient(135deg, var(--green) 0%, rgba(19, 136, 8, 0.9) 100%);
+    box-shadow: 0 6px 20px rgba(19, 136, 8, 0.4);
+    border: 2px solid rgba(19, 136, 8, 0.3);
+}
+
+.indian-market .sentiment-badge.bearish {
+    background: linear-gradient(135deg, var(--saffron) 0%, rgba(255, 153, 51, 0.9) 100%);
+    box-shadow: 0 6px 20px rgba(255, 153, 51, 0.4);
+    border: 2px solid rgba(255, 153, 51, 0.3);
+}
+
+.indian-market .ai-insight-card::before {
+    background: linear-gradient(180deg, var(--saffron) 0%, var(--green) 50%, var(--navy) 100%);
+    width: 6px;
+}
+
+.indian-market .ai-insight-card {
+    border: 1px solid rgba(255, 153, 51, 0.2);
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.7) 100%);
+}
+
+.indian-market .ai-insight-card:hover {
+    border-color: rgba(255, 153, 51, 0.4);
+    box-shadow: 0 10px 30px rgba(255, 153, 51, 0.15);
+}
+
+.indian-market .detailed-section {
+    border-left: 4px solid var(--saffron);
+    background: linear-gradient(135deg, rgba(255, 153, 51, 0.05) 0%, rgba(19, 136, 8, 0.05) 100%);
+}
+
+.indian-market .detailed-section h4 i {
+    color: var(--saffron);
+}
+
+.indian-market .stock-overview {
+    background: linear-gradient(145deg, rgba(255, 153, 51, 0.05) 0%, rgba(19, 136, 8, 0.05) 100%);
+    border: 1px solid rgba(255, 153, 51, 0.2);
+}
+
+.indian-market .time-range-btn.active {
+    background: linear-gradient(135deg, var(--saffron) 0%, var(--green) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 153, 51, 0.3);
+}
+
+.indian-market .time-range-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 153, 51, 0.2) 0%, rgba(19, 136, 8, 0.2) 100%);
+    border-color: var(--saffron);
+}
+
+/* Indian Market Header Enhancement */
+.indian-market .page-header {
+    background: linear-gradient(135deg, rgba(255, 153, 51, 0.1) 0%, rgba(19, 136, 8, 0.1) 50%, rgba(0, 0, 128, 0.1) 100%);
+    border-bottom: 3px solid transparent;
+    border-image: linear-gradient(90deg, var(--saffron), var(--green), var(--navy)) 1;
+    position: relative;
+}
+
+.indian-market .page-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--saffron) 0%, var(--green) 50%, var(--navy) 100%);
+    z-index: 1;
+}
+
+/* Market Status Indicator for Indian Market */
+.market-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    margin-left: var(--space-md);
+}
+
+.indian-market .market-status-indicator {
+    background: linear-gradient(135deg, rgba(255, 153, 51, 0.1) 0%, rgba(19, 136, 8, 0.1) 100%);
+    border-color: rgba(255, 153, 51, 0.3);
+}
+
+.market-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-success);
+    animation: pulse-green 2s infinite;
+}
+
+.market-status-dot.closed {
+    background: var(--accent-danger);
+    animation: none;
+}
+
+.market-status-text {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.indian-market .market-status-text {
+    color: var(--saffron);
+}
+
+/* Enhanced Exchange Badges */
+.exchange-badge.nse {
+    background: linear-gradient(135deg, var(--saffron) 0%, rgba(255, 153, 51, 0.8) 100%);
+    color: white;
+    border: 1px solid rgba(255, 153, 51, 0.5);
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(255, 153, 51, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.exchange-badge.nse::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.exchange-badge.nse:hover::before {
+    left: 100%;
+}
+
+.exchange-badge.bse {
+    background: linear-gradient(135deg, var(--green) 0%, rgba(19, 136, 8, 0.8) 100%);
+    color: white;
+    border: 1px solid rgba(19, 136, 8, 0.5);
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(19, 136, 8, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.exchange-badge.bse::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.exchange-badge.bse:hover::before {
+    left: 100%;
+}
+
+/* Indian Market Cultural Elements */
+.indian-market .page-header h1::after {
+    content: '🇮🇳';
+    margin-left: var(--space-sm);
+    font-size: 0.8em;
+    opacity: 0.8;
+}
+
+.indian-market .current-price::before {
+    content: '₹';
+    font-weight: 700;
+    margin-right: 2px;
+    color: var(--gold);
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+/* Enhanced Tooltips */
+.tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.tooltip::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+    color: var(--text-primary);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: 115%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(15, 23, 42, 0.95);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tooltip:hover::before,
+.tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-5px);
+}
+
+.indian-market .tooltip::before {
+    background: linear-gradient(145deg, rgba(255, 153, 51, 0.1) 0%, rgba(19, 136, 8, 0.1) 100%);
+    border-color: rgba(255, 153, 51, 0.3);
+}
+
+/* Enhanced Focus States */
+*:focus-visible {
+    outline: 2px solid #8b5cf6;
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+.indian-market *:focus-visible {
+    outline-color: var(--saffron);
+}
+
+/* Currency Formatting */
+.currency-inr::before {
+    content: '₹';
+    margin-right: 2px;
+}
+
+.currency-usd::before {
+    content: '$';
+    margin-right: 1px;
+}
+
+/* Market Hours Indicator */
+.market-hours {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-left: var(--space-md);
+}
+
+.market-hours-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-success);
+    animation: pulse-green 2s infinite;
+}
+
+.market-hours-indicator.closed {
+    background: var(--accent-danger);
+    animation: none;
+}
+
+.market-hours-text {
+    font-weight: 500;
+}
+
+/* Indian Stock Exchanges */
+.exchange-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: var(--radius-xs);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-left: var(--space-xs);
+}
+
+.exchange-badge.nse {
+    background: rgba(255, 107, 53, 0.2);
+    color: #ff6b35;
+    border: 1px solid rgba(255, 107, 53, 0.3);
+}
+
+.exchange-badge.bse {
+    background: rgba(19, 136, 8, 0.2);
+    color: #138808;
+    border: 1px solid rgba(19, 136, 8, 0.3);
+}
+
+/* Enhanced Button Styling */
+.btn {
+    position: relative;
+    overflow: hidden;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    border: none;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+}
+
+.indian-market .btn-primary {
+    background: linear-gradient(135deg, var(--saffron) 0%, var(--green) 100%);
+}
+
+.indian-market .btn-primary:hover {
+    background: linear-gradient(135deg, #e6851f 0%, #0f6b06 100%);
+    box-shadow: 0 8px 25px rgba(255, 153, 51, 0.4);
+}
+
+/* Enhanced Page Animations */
+.page {
+    animation: pageSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes pageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enhanced Card Animations */
+.stock-overview,
+.time-range-panel,
+.indicator-panel,
+.quick-analysis-panel,
+.analysis-metrics {
+    animation: cardSlideIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    animation-fill-mode: both;
+}
+
+.stock-overview { animation-delay: 0.1s; }
+.time-range-panel { animation-delay: 0.2s; }
+.indicator-panel { animation-delay: 0.3s; }
+.quick-analysis-panel { animation-delay: 0.4s; }
+.analysis-metrics { animation-delay: 0.5s; }
+
+@keyframes cardSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Enhanced Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #8b5cf6 0%, #ec4899 100%);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #7c3aed 0%, #db2777 100%);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+}
+
+.indian-market ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--saffron) 0%, var(--green) 100%);
+}
+
+.indian-market ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #e6851f 0%, #0f6b06 100%);
+    box-shadow: 0 0 10px rgba(255, 153, 51, 0.5);
+}
+
+/* Enhanced Loading States */
+.loading-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xl);
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.loading-indicator::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(139, 92, 246, 0.3);
+    border-top: 2px solid #8b5cf6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: var(--space-sm);
+}
+
+.indian-market .loading-indicator::before {
+    border-color: rgba(255, 153, 51, 0.3);
+    border-top-color: var(--saffron);
+}
+
+/* Responsive Design for Market Selector */
+@media (max-width: 768px) {
+    .analysis-controls {
+        flex-direction: column;
+        gap: var(--space-md);
+        align-items: stretch;
+        padding: var(--space-sm);
+    }
+    
+    .market-selector {
+        justify-content: center;
+    }
+    
+    .market-select {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .symbol-search {
+        width: 100%;
+        max-width: none;
+    }
+    
+    .symbol-input {
+        width: 100%;
+    }
+    
+    .market-status-indicator {
+        justify-content: center;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .market-selector {
+        padding: var(--space-xs) var(--space-sm);
+    }
+    
+    .market-selector label {
+        font-size: 0.8rem;
+    }
+    
+    .market-select {
+        font-size: 0.8rem;
+        padding: 8px 12px;
+    }
+    
+    .symbol-input {
+        padding: 10px 14px;
+        font-size: 0.9rem;
+    }
+    
+    .suggestion-item {
+        padding: var(--space-sm) var(--space-md);
+    }
+    
+    .suggestion-symbol {
+        font-size: 0.9rem;
+    }
+    
+    .suggestion-name {
+        font-size: 0.8rem;
+    }
+}
