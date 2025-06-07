@@ -442,6 +442,150 @@
                         <div id="macd-chart" class="indicator-chart"></div>
                         <div id="stochastic-chart" class="indicator-chart"></div>
                     </div>
+                    
+                    <!-- AI Analysis Section -->
+                    <div class="ai-analysis-section" id="ai-analysis-section">
+                        <div class="ai-analysis-header">
+                            <h3>
+                                <i class="fas fa-brain"></i>
+                                AI Market Analysis
+                            </h3>
+                            <div class="ai-analysis-controls">
+                                <button class="btn btn-secondary" id="refresh-ai-analysis">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Refresh Analysis
+                                </button>
+                                <button class="btn btn-info" id="toggle-ai-details">
+                                    <i class="fas fa-expand"></i>
+                                    Show Details
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="ai-analysis-content" id="ai-analysis-content">
+                            <div class="ai-analysis-loading" id="ai-analysis-loading">
+                                <div class="loading-spinner">
+                                    <div class="spinner-ring"></div>
+                                </div>
+                                <p>AI is analyzing market data...</p>
+                            </div>
+                            
+                            <div class="ai-analysis-results" id="ai-analysis-results" style="display: none;">
+                                <!-- Overall Sentiment -->
+                                <div class="ai-insight-card sentiment-card">
+                                    <div class="insight-header">
+                                        <i class="fas fa-chart-line"></i>
+                                        <h4>Market Sentiment</h4>
+                                    </div>
+                                    <div class="sentiment-indicator" id="ai-sentiment">
+                                        <span class="sentiment-badge" id="sentiment-badge">Analyzing...</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Key Insights Grid -->
+                                <div class="ai-insights-grid">
+                                    <div class="ai-insight-card">
+                                        <div class="insight-header">
+                                            <i class="fas fa-dollar-sign"></i>
+                                            <h4>Price Analysis</h4>
+                                        </div>
+                                        <div class="insight-content" id="ai-price-analysis">
+                                            Analyzing current price action and trends...
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="ai-insight-card">
+                                        <div class="insight-header">
+                                            <i class="fas fa-chart-bar"></i>
+                                            <h4>Technical Summary</h4>
+                                        </div>
+                                        <div class="insight-content" id="ai-technical-summary">
+                                            Evaluating technical indicators...
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="ai-insight-card">
+                                        <div class="insight-header">
+                                            <i class="fas fa-volume-up"></i>
+                                            <h4>Volume Insights</h4>
+                                        </div>
+                                        <div class="insight-content" id="ai-volume-insights">
+                                            Analyzing volume patterns...
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="ai-insight-card">
+                                        <div class="insight-header">
+                                            <i class="fas fa-shield-alt"></i>
+                                            <h4>Risk Assessment</h4>
+                                        </div>
+                                        <div class="insight-content" id="ai-risk-assessment">
+                                            Evaluating risk factors...
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Detailed Analysis (Expandable) -->
+                                <div class="ai-detailed-analysis" id="ai-detailed-analysis" style="display: none;">
+                                    <div class="detailed-section">
+                                        <h4>
+                                            <i class="fas fa-crosshairs"></i>
+                                            Support & Resistance
+                                        </h4>
+                                        <div class="insight-content" id="ai-support-resistance">
+                                            Identifying key levels...
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="detailed-section">
+                                        <h4>
+                                            <i class="fas fa-crystal-ball"></i>
+                                            Short-term Outlook
+                                        </h4>
+                                        <div class="insight-content" id="ai-short-term-outlook">
+                                            Analyzing short-term prospects...
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="detailed-section">
+                                        <h4>
+                                            <i class="fas fa-bullseye"></i>
+                                            Key Levels to Watch
+                                        </h4>
+                                        <div class="insight-content" id="ai-key-levels">
+                                            Identifying critical price levels...
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="detailed-section trading-suggestion">
+                                        <h4>
+                                            <i class="fas fa-lightbulb"></i>
+                                            Educational Insights
+                                        </h4>
+                                        <div class="insight-content" id="ai-trading-suggestion">
+                                            Generating educational insights...
+                                        </div>
+                                        <div class="disclaimer">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            This analysis is for educational purposes only and should not be considered as financial advice.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="ai-analysis-error" id="ai-analysis-error" style="display: none;">
+                                <div class="error-content">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <h4>Analysis Unavailable</h4>
+                                    <p>AI analysis is currently unavailable. Please check your API configuration or try again later.</p>
+                                    <button class="btn btn-primary" id="retry-ai-analysis">
+                                        <i class="fas fa-redo"></i>
+                                        Retry Analysis
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

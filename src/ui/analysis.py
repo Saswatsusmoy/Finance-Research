@@ -10,6 +10,13 @@ from src.agents.market_data_agent import MarketDataAgent
 from src.agents.news_sentiment_agent import NewsSentimentAgent
 from src.agents.technical_analysis_agent import TechnicalAnalysisAgent
 
+# Try to import AI analysis agent
+try:
+    from src.agents.ai_analysis_agent import ai_analysis_agent, StockData, TechnicalIndicators
+    AI_ANALYSIS_AVAILABLE = True
+except ImportError:
+    AI_ANALYSIS_AVAILABLE = False
+
 # Enhanced color scheme for better visual appeal
 CHART_COLORS = {
     'primary': '#00d2ff',
@@ -379,7 +386,7 @@ def render_technical_analysis(symbol, start_date, end_date, run_analysis):
                 df["BB_Lower"] = df["BB_Middle"] - (bb_std * 2)
                 
                 # Create tabs for different technical analysis views
-                tab1, tab2, tab3, tab4 = st.tabs(["📈 Price & Volume", "📊 Moving Averages", "⚡ Oscillators", "🔬 Advanced Analysis"])
+                tab1, tab2, tab3, tab4 = st.tabs(["📈 Price & Volume", "📊 Moving Averages", "⚡ Oscillators", "🤖 AI Analysis"])
                 
                 with tab1:
                     st.subheader("Price & Volume Analysis")

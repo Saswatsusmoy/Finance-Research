@@ -426,40 +426,28 @@ const Utils = {
         const macdLine = [];
         for (let i = 0; i < prices.length; i++) {
             if (fastEMA[i] !== undefined && slowEMA[i] !== undefined) {
-                macdLine[i] = fastEMA[i] - slowEMA[i];
+                macdLine.push(fastEMA[i] - slowEMA[i]);
             }
         }
         
-        // Filter out undefined values for signal line calculation
-        const validMacdValues = macdLine.filter(x => x !== undefined);
-        if (validMacdValues.length < signalPeriod) {
-            return { macdLine, signalLine: [], histogram: [] };
-        }
-        
-        // Calculate signal line
-        const signalEMA = this.calculateEMA(validMacdValues, signalPeriod);
-        
-        // Align signal line with MACD line indices
-        const signalLine = [];
-        let signalIndex = 0;
-        for (let i = 0; i < macdLine.length; i++) {
-            if (macdLine[i] !== undefined) {
-                if (signalIndex < signalEMA.length) {
-                    signalLine[i] = signalEMA[signalIndex];
-                    signalIndex++;
-                }
-            }
-        }
+        // Calculate signal line (EMA of MACD line)
+        const signalLine = this.calculateEMA(macdLine, signalPeriod);
         
         // Calculate histogram
         const histogram = [];
-        for (let i = 0; i < macdLine.length; i++) {
+        for (let i = 0; i < Math.min(macdLine.length, signalLine.length); i++) {
             if (macdLine[i] !== undefined && signalLine[i] !== undefined) {
-                histogram[i] = macdLine[i] - signalLine[i];
+                histogram.push(macdLine[i] - signalLine[i]);
+            } else {
+                histogram.push(undefined);
             }
         }
         
-        return { macdLine, signalLine, histogram };
+        return { 
+            macdLine: macdLine, 
+            signalLine: signalLine, 
+            histogram: histogram 
+        };
     },
 
     calculateStochastic: function(highs, lows, closes, kPeriod = 14, dPeriod = 3) {
@@ -602,6 +590,167 @@ const Utils = {
         }
         
         return { maxDrawdown, drawdowns };
+    },
+
+    // Basic Technical Indicators (Missing Functions)
+    calculateSMA: function(prices, period) {
+        if (!prices || prices.length < period) return [];
+        
+        const sma = [];
+        for (let i = period - 1; i < prices.length; i++) {
+            const sum = prices.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+            sma.push(sum / period);
+        }
+        return sma;
+    },
+
+    calculateEMA: function(prices, period) {
+        if (!prices || prices.length < period) return [];
+        
+        const multiplier = 2 / (period + 1);
+        const ema = [];
+        
+        // Fill initial undefined values
+        for (let i = 0; i < period - 1; i++) {
+            ema.push(undefined);
+        }
+        
+        // Start with SMA for first value
+        const firstSMA = prices.slice(0, period).reduce((a, b) => a + b, 0) / period;
+        ema.push(firstSMA);
+        
+        // Calculate EMA for remaining values
+        for (let i = period; i < prices.length; i++) {
+            const currentEMA = (prices[i] * multiplier) + (ema[ema.length - 1] * (1 - multiplier));
+            ema.push(currentEMA);
+        }
+        
+        return ema;
+    },
+
+    calculateRSI: function(prices, period = 14) {
+        if (!prices || prices.length < period + 1) return [];
+        
+        const gains = [];
+        const losses = [];
+        
+        // Calculate price changes
+        for (let i = 1; i < prices.length; i++) {
+            const change = prices[i] - prices[i - 1];
+            gains.push(change > 0 ? change : 0);
+            losses.push(change < 0 ? Math.abs(change) : 0);
+        }
+        
+        const rsi = [];
+        
+        // Calculate initial average gain and loss
+        let avgGain = gains.slice(0, period).reduce((a, b) => a + b, 0) / period;
+        let avgLoss = losses.slice(0, period).reduce((a, b) => a + b, 0) / period;
+        
+        // Calculate first RSI value
+        let rs = avgGain / avgLoss;
+        rsi.push(100 - (100 / (1 + rs)));
+        
+        // Calculate subsequent RSI values
+        for (let i = period; i < gains.length; i++) {
+            avgGain = ((avgGain * (period - 1)) + gains[i]) / period;
+            avgLoss = ((avgLoss * (period - 1)) + losses[i]) / period;
+            rs = avgGain / avgLoss;
+            rsi.push(100 - (100 / (1 + rs)));
+        }
+        
+        return rsi;
+    },
+
+    calculateBollingerBands: function(prices, period = 20, stdDev = 2) {
+        if (!prices || prices.length < period) {
+            return { upper: [], middle: [], lower: [] };
+        }
+        
+        const sma = this.calculateSMA(prices, period);
+        const upper = [];
+        const middle = [];
+        const lower = [];
+        
+        for (let i = period - 1; i < prices.length; i++) {
+            const slice = prices.slice(i - period + 1, i + 1);
+            const mean = slice.reduce((a, b) => a + b) / slice.length;
+            const variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / slice.length;
+            const standardDeviation = Math.sqrt(variance);
+            
+            const smaValue = sma[i - period + 1];
+            middle.push(smaValue);
+            upper.push(smaValue + (stdDev * standardDeviation));
+            lower.push(smaValue - (stdDev * standardDeviation));
+        }
+        
+        return { upper, middle, lower };
+    },
+
+    // Volume Analysis
+    calculateVolumeProfile: function(prices, volumes, bins = 20) {
+        if (!prices || !volumes || prices.length !== volumes.length) return [];
+        
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+        const priceRange = maxPrice - minPrice;
+        const binSize = priceRange / bins;
+        
+        const profile = [];
+        
+        for (let i = 0; i < bins; i++) {
+            const binLow = minPrice + (i * binSize);
+            const binHigh = binLow + binSize;
+            let totalVolume = 0;
+            
+            for (let j = 0; j < prices.length; j++) {
+                if (prices[j] >= binLow && prices[j] < binHigh) {
+                    totalVolume += volumes[j];
+                }
+            }
+            
+            profile.push({
+                priceLevel: (binLow + binHigh) / 2,
+                volume: totalVolume
+            });
+        }
+        
+        return profile;
+    },
+
+    // Support and Resistance
+    findSupportResistance: function(prices, window = 5) {
+        if (!prices || prices.length < window * 2 + 1) return { support: [], resistance: [] };
+        
+        const support = [];
+        const resistance = [];
+        
+        for (let i = window; i < prices.length - window; i++) {
+            const current = prices[i];
+            let isSupport = true;
+            let isResistance = true;
+            
+            // Check if current price is a local minimum (support)
+            for (let j = i - window; j <= i + window; j++) {
+                if (j !== i && prices[j] <= current) {
+                    isSupport = false;
+                    break;
+                }
+            }
+            
+            // Check if current price is a local maximum (resistance)
+            for (let j = i - window; j <= i + window; j++) {
+                if (j !== i && prices[j] >= current) {
+                    isResistance = false;
+                    break;
+                }
+            }
+            
+            if (isSupport) support.push({ index: i, price: current });
+            if (isResistance) resistance.push({ index: i, price: current });
+        }
+        
+        return { support, resistance };
     }
 };
 
